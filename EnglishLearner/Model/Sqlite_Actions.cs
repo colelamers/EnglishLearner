@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using System.Data;
 using ProjectLogging;
@@ -43,9 +39,9 @@ namespace EnglishLearner
         /// Default constructor. Just requires the name to the file. Not the full path or the extension, just the exact name. Get's converted into lower case so casing is not important.
         /// </summary>
         /// <param name="SqlFile">Ex: MyDatabase (will become mydatabase), portabledb, localstore</param>
-        public Sqlite_Actions(string SqlPath, string SqlFile)
+        public Sqlite_Actions(string SqlPath, string SqlFileName_NoExtension)
         {
-            this.FileName = SqlFile.ToLower();
+            this.FileName = SqlFileName_NoExtension.ToLower();
             this.ActiveTable = "";
             this.ActiveTableSchema = new DataTable();
             this.DatabaseTableList = new List<string>();

@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using EnglishLearner.Model;
 using Microsoft.Data.Sqlite; // NuGet package; Used to work with my Sqlite Code
 using ProjectLogging;
 
@@ -18,11 +17,12 @@ namespace EnglishLearner
         {
             _debuglog.LogAction("Function Run called...");
             StartupActions();
+
             
             List<string> subDirs = Directory.GetDirectories(_config.SolutionDirectory)
                 .Select(d => new { Attr = new DirectoryInfo(d).Attributes, Dir = d })
                 .Select(x => x.Dir)
-                .ToList(); // Get's paths of all folders when it's needed
+                .ToList(); // TODO: --3-- might want this might not. In case we need to reference to the exact directory location of a file in a folder
 
             Console.WriteLine("Hello World!");
         }
