@@ -18,7 +18,6 @@ namespace EnglishLearner
      * TODO: --4-- must create summaries and explaining what can be passed in to each function as an example and the purpose for them
      * TODO: --1-- need to account for SQL injection. do dictionaries. verify for other functions that this is being done as well.
      * TODO: --4-- try to make a more consistent xml documentation including <code> tags for variables.
-     * TODO: --g-- update execute query code as needed
      */
     /// <summary>
     /// Class that simplifies access to the Microsoft.Data.Sqlite nuget package. 
@@ -38,7 +37,8 @@ namespace EnglishLearner
         /// <summary>
         /// Default constructor. Just requires the name to the file. Not the full path or the extension, just the exact name. Get's converted into lower case so casing is not important.
         /// </summary>
-        /// <param name="SqlFile">Ex: MyDatabase (will become mydatabase), portabledb, localstore</param>
+        /// <param name="SqlPath"> This is just the path. Ex. C:\Users\Todd\Documents\</param>
+        /// <param name="SqlFile">The file name without the extension. Ex: MyDatabase (will become mydatabase), portabledb, localstore</param>
         public Sqlite_Actions(string SqlPath, string SqlFileName_NoExtension)
         {
             this.FileName = SqlFileName_NoExtension.ToLower();
@@ -66,17 +66,16 @@ namespace EnglishLearner
                     if (keyIsColumnValueIsType == null)
                     {
                         return;
-                    } // if
+                    } // if;
 
                     tableName = tableName.ToLower(); // tables enforced to lowercase
 
                     if (tableName.Equals(this.ActiveTable))
                     {
                         return;
-                    } // if
+                    } // if;
 
                     string query = $"CREATE TABLE IF NOT EXISTS {tableName}({primaryKey}";
-                    int i = 0;
 
                     foreach (KeyValuePair<string, string> kvp in keyIsColumnValueIsType)
                     {
@@ -101,11 +100,11 @@ namespace EnglishLearner
                     command.CommandText = query;
                     command.ExecuteNonQuery();
                 } // using; sqlconnection
-            } // try
+            } // try;
             catch (Exception e)
             {
                 this._debugLogging.LogAction($"Exception: {e}");
-            } // catch
+            } // catch;
         } // function CreateTable; names the table and builds additional data
 
         /// <summary>
@@ -145,19 +144,19 @@ namespace EnglishLearner
                                 } // for; iterate columns
                                 this.ActiveQueryResults.Rows.Add(dRow);
                             } // while; iterate rows
-                        } // try
+                        } // try;
                         catch (Exception e)
                         {
                             _debugLogging.LogAction($"Error: {e}");
-                        } // catch
+                        } // catch;
                     } // using; ExecuteReader
                 } // using; sqlconnection
-            } // try
+            } // try;
             catch (Exception e)
             {
                 _debugLogging.LogAction($"Error: {e}");
-            } // catch
-        } // function PerformCommand
+            } // catch;
+        } // function PerformCommand;
 
         /// <summary>
         /// This function allows for executing a query with delegate function. Currently only utilized with getting a table schema so do not use this one unless you explicitly know why.
@@ -181,7 +180,7 @@ namespace EnglishLearner
                     whichFunction(reader);
                 } // using; sqlitedatareader
             } // using; sqlconnection
-        } // function ExecuteQuery
+        } // function ExecuteQuery;
 
         /// <summary>
         /// This just returns the active tables in a SQLite database and clears out the variable so that it doesn't affect future transactions.
@@ -193,9 +192,9 @@ namespace EnglishLearner
             foreach (DataRow dRow in this.ActiveQueryResults.Rows)
             {
                 this.DatabaseTableList.Add(dRow["name"].ToString());
-            }
+            } // foreach;
             this.ActiveQueryResults = new DataTable(); // empties the table right away
-        } // func GetDatabaseTables
+        } // function GetDatabaseTables;
 
         /// <summary>
         /// Just sets the active table. 
@@ -214,14 +213,14 @@ namespace EnglishLearner
                 {
                     nameIsInTable = true;
                     break;
-                } // if
-            } // foreach tablename
+                } // if;
+            } // foreach; tablename
 
-            if (nameIsInTable) { this.ActiveTable = lowerTableName; }
+            if (nameIsInTable) { this.ActiveTable = lowerTableName; } // if;
             ExecuteQuery(del_ExecuteQuery_GetSchema, $"PRAGMA table_info('{this.ActiveTable}')");
 
             return nameIsInTable;
-        } // function ChangeActiveTable
+        } // function ChangeActiveTable;
 
         /// <summary>
         /// Currently assumes you know the schema of the table and what specifically goes into it. 
@@ -247,7 +246,7 @@ namespace EnglishLearner
                             {
                                 query += ",";
                             } // if; tacks on the last comma
-                        } // for
+                        } // for;
 
                         query += ");";
 
@@ -255,13 +254,13 @@ namespace EnglishLearner
                         command.CommandText = query;
                         command.ExecuteNonQuery();
                     } // using; sqlconnection
-                } // if
-            } // try
+                } // if;
+            } // try;
             catch (Exception e)
             {
                 _debugLogging.LogAction("Error:" + e);
-            } // catch
-        } // function InsertInto
+            } // catch;
+        } // function InsertInto;
 
         /// <summary>
         /// Primarily for getting the schema of the database. The reader can be any SqliteDataReader and it's just a generic instantiated reader. This is used as a delegate function
@@ -288,12 +287,12 @@ namespace EnglishLearner
                     {
                         dRow[reader.GetName(i)] = "null";
                         _debugLogging.LogAction($"Error: {e}");
-                    } // Catch; for nulls in table since null cannot be in a datatable
+                    } // catch; for nulls in table since null cannot be in a datatable
                 } // for; iterates through columns
 
                 this.ActiveTableSchema.Rows.Add(dRow);
             } // while; iterates through rows
-        } // function del_ExecuteQuery_GetSchema
+        } // function del_ExecuteQuery_GetSchema;
 
         /*
          * 

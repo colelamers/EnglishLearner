@@ -9,7 +9,7 @@ namespace EnglishLearner.Controller
 
         public Speaking()
         {
-            // TODO: --1-- this will contain the logic for how it will learn how to speak from what is retained in the brain
+            // TODO: --1-- this will contain the logic for how it will learn how to speak from what is retained in the brain. most likely tree traversal and DFS/BFS searching
         }
     }
 }

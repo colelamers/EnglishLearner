@@ -1,0 +1,30 @@
+﻿* All namespaces will be labeled as "namespace EnglishLearner" to allow for all files globally to be accessable
+* Class members will be accessed using "this"
+* All members and and methods will contain access modifiers (public, private, protected, etc)
+* Public members will start with a capital letter
+* Private members will start with a "_"
+* Public functions/methods will start with a capital letter
+* Private functions/methods will be camelCase
+* Comments will be added to the end of a bracketed clause of what type (if, else, while, function ..., etc) denoting what it is
+* C#.NET inline XML comments can be utilized at will if desired
+* Brackets will be below clauses, not beside them
+* Functions will be organized alphabetically or in regions
+* Any Saving, Loading, or Modifications to the Config file must be discussed before merging commits (Mainly for Cole to verify no code conflicts)
+* Logging will be done for all functions at a minimum of stating when a function is called
+* TODOs will be done as follows:
+TODO: --0-- Discussion/talk to lead
+TODO: --1-- Vital to the program, needs to be coded or worked on.
+TODO: --2-- Redundant or bad code but it's working. Only considered a todo 1 when it prevents you from completing another todo 1.
+TODO: --3-- Working and reliable code, but would like to change it or come back to it at some point; very low priority
+TODO: --4-- Wishlist; meaning would like to add but don't have time to at the moment
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 

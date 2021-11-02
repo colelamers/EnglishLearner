@@ -10,7 +10,7 @@ namespace EnglishLearner
         public string DictionaryPath { get; set; }
         public string ConfigPath { get; set; }
         public string SolutionDirectory { get; set; }
-        public int ExitCode { get; set; }
+        public int ExitCode { get; set; } // TODO: --3-- i forgot why i added this in but there was a particular reason
         public List<string> ProjectFolderPaths { get; set; }
         public Configuration()
         {
@@ -18,6 +18,6 @@ namespace EnglishLearner
             ConfigPath = "";
             SolutionDirectory = "";
             ExitCode = 1;
-        } // Constructor; default
+        } // constructor; default
     }
 }

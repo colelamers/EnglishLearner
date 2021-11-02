@@ -13,34 +13,41 @@ namespace EnglishLearner
         DebugLogging _debuglog = new DebugLogging();
         Sqlite_Actions _sql;
 
+        static void Main(string[] args)
+        {
+            UniversalFunctions.LogToFile("Main Function Called");
+            Main_View n = new Main_View();
+            n.Run(); // Exists because we can't do some things within a static function like Main so handling everything in a non-static run function
+        } // function Main;
+
         private void Run()
         {
             _debuglog.LogAction("Function Run called...");
             StartupActions();
-
             
-            List<string> subDirs = Directory.GetDirectories(_config.SolutionDirectory)
+            _config.ProjectFolderPaths = Directory.GetDirectories(_config.SolutionDirectory)
                 .Select(d => new { Attr = new DirectoryInfo(d).Attributes, Dir = d })
                 .Select(x => x.Dir)
-                .ToList(); // TODO: --3-- might want this might not. In case we need to reference to the exact directory location of a file in a folder
+                .ToList(); // Gives us the exact directory paths of all the folders within the the program.
 
-            Console.WriteLine("Hello World!");
-        }
+            UniversalFunctions.SaveConfiguration(ref _config);
+            // TODO: --3-- consider adding a .where clause that ignores the extra folders we don't care about
+        } // function Run;
 
         private void StartupActions()
         {
-            _debuglog.LogAction("Function StartupActions called...");
-            SetupConfigFile.LoadAndSaveFile(ref _config);
+            UniversalFunctions.LogToFile("Function StartupActions called...");
+            //_debuglog.LogAction("Function StartupActions called...");
+            UniversalFunctions.LoadConfiguration(ref _config);
+
+            _config.ConfigPath = "Cole Test";
+            _config.ExitCode = 0;
+            //ProjectLogging.SetupConfigFile.LoadAndSaveFile(ref _config);
             _config.SolutionDirectory = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Directory.GetCurrentDirectory())));
-            _sql = new Sqlite_Actions(_config.SolutionDirectory + "\\Model", "Dictionary");
-        }
+            _sql = new Sqlite_Actions(_config.SolutionDirectory + "\\Data", "Dictionary");
+        } // function StartupActions;
 
 
-        static void Main(string[] args)
-        {
-            Main_View n = new Main_View();
-            n.Run();
-        } // Main
 
 
     }

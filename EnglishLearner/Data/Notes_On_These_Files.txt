@@ -1,0 +1,1 @@
+﻿All these files should be relevant to datasets or something that needs to be read in. Nothing in here should be code. These should solely be the files we interact with.

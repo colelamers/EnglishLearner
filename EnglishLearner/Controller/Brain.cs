@@ -8,6 +8,7 @@ namespace EnglishLearner
     class Brain
     {
         // TODO: --1-- gotta implement a Tree somehow...
+        // TODO: --1-- utilize regex to determine what words are what
         public List<Phrase> Sentence_Memory { get; set; }
         // TODO: --1-- should contain all the memory? or just functions. haven't hashed this out yet.
         // TODO: --1-- something like this? List<Func<string, string>> item = new List<Func<string, string>();
