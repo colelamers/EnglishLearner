@@ -4,6 +4,15 @@ using System.Text;
 
 namespace EnglishLearner.Controller
 {
+    /*
+     * Created by Cole Lamers
+     * Date: 2021-11-04
+     * 
+     * == Purpose ==
+     * 
+     * 
+     * 
+     */
     class SentenceLearning : Brain
     {
         // TODO: --1-- thinking this could be the class that handles learning things sentence by sentence that we can just call in a loop in the Main_View.Run() function or something
@@ -12,5 +21,7 @@ namespace EnglishLearner.Controller
         {
             // TODO: --1-- not sure we'll need a constructor but it's here in case you do
         } // constructor; SentenceLearning
+
+
     }
 }

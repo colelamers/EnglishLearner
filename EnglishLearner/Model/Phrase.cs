@@ -4,6 +4,16 @@ using System.Text;
 
 namespace EnglishLearner
 {
+    /*
+     * Created by Cole Lamers 
+     * Date: 2021-11-04
+     * 
+     * == Purpose ==
+     * 
+     * 
+     * 
+     */
+
     public class Phrase
     {
         public string Phrase_Sentence { get; set; }
@@ -12,6 +22,7 @@ namespace EnglishLearner
         public string Phrase_Object { get; set; }
         public string Phrase_Tense_Verb { get; set; }
         public bool Phrase_Subject_Plural { get; set; }
+        public char Phrase_Punctuation { get; set; }
         public List<object> RulesLearned = new List<object>(); // TODO: --1-- this will need to be revised to contain Func or delegates. this will things the brain learns and knows to apply processing logic to for additional setences. Talk to Cole for more info.
 
         public Phrase(string sentence)
@@ -20,7 +31,16 @@ namespace EnglishLearner
             this.Phrase_Subject = interpretSubject();
             this.Phrase_Verb = interpretVerb();
             this.Phrase_Object = interpretObject();
+            this.Phrase_Punctuation = interpretPunctuation();
         } // constructor; Phrase
+
+        private char interpretPunctuation()
+        {
+            char the_punctuation = ' ';
+
+            // TODO: --1-- interpretPunctuation logic here
+            return the_punctuation;
+        } // function; interpretPunctuation
 
         private string interpretSubject()
         {
@@ -46,6 +66,7 @@ namespace EnglishLearner
 
         private bool interpretSubjectPlural()
         {
+            // TODO: --1-- utilize this function as a basis for other functions when determining tense and other things
             // TODO: --1-- this is not correct because words like "US, zealous, cross, pelvis, taxes, grass." Can add a check for 's, ' at the end, double 's', -ous, -ass/-ess/-iss/-oss/-uss
             char[] letterArray = this.Phrase_Subject.ToLower().ToCharArray();
             // TODO: --1-- we could also utilize regex for this instead
