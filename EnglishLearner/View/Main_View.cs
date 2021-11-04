@@ -10,7 +10,7 @@ namespace EnglishLearner
      * Date: 2021-11-04
      * 
      * == Purpose ==
-     * 
+     * This is where the primary input from our application will occur.
      * 
      * 
      */
