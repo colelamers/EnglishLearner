@@ -12,6 +12,8 @@ namespace EnglishLearner
      * == Purpose ==
      * hello world!
      * TESTING 123!
+     * This is where the primary input from our application will occur.
+     * 
      * 
      */
 
