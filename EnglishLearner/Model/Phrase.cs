@@ -9,7 +9,7 @@ namespace EnglishLearner
      * Date: 2021-11-04
      * 
      * == Purpose ==
-     * 
+     * The purpsoe of this is to contain basic information of a sentence to develop basic caveman speaking.
      * 
      * 
      */
@@ -17,17 +17,19 @@ namespace EnglishLearner
     public class Phrase
     {
         public string Phrase_Sentence { get; set; }
+        public string[] Phrase_Split_Sentence { get; set; }
         public string Phrase_Subject { get; set; }
         public string Phrase_Verb { get; set; }
         public string Phrase_Object { get; set; }
-        public string Phrase_Tense_Verb { get; set; }
-        public bool Phrase_Subject_Plural { get; set; }
+        //public string Phrase_Tense_Verb { get; set; } //TODO: --4-- for future implementation
+        //public bool Phrase_Subject_Plural { get; set; } // TODO: --4-- for future implementation
         public char Phrase_Punctuation { get; set; }
         public List<object> RulesLearned = new List<object>(); // TODO: --1-- this will need to be revised to contain Func or delegates. this will things the brain learns and knows to apply processing logic to for additional setences. Talk to Cole for more info.
 
         public Phrase(string sentence)
         {
             this.Phrase_Sentence = sentence;
+            this.Phrase_Split_Sentence = sentence.Split(" "); // TODO: --1-- not sure this works yet
             this.Phrase_Subject = interpretSubject();
             this.Phrase_Verb = interpretVerb();
             this.Phrase_Object = interpretObject();

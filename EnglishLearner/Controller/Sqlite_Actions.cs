@@ -115,6 +115,9 @@ namespace EnglishLearner
         {
             Dictionary<string, string> queryDict = new Dictionary<string, string>();
             queryDict.Add("query", transaction);
+            this.ActiveQueryResults = null;
+            this.ActiveQueryResults = new DataTable();
+
             //TODO: --3-- test this with a 'DROP TABLE;' and see if it posts it as a string or it executes the drop table command.
             try
             {
@@ -207,7 +210,7 @@ namespace EnglishLearner
             string lowerTableName = tableName.ToLower();
             bool nameIsInTable = false;
 
-            foreach (string aTable in DatabaseTableList)
+            foreach (string aTable in this.DatabaseTableList)
             {
                 if (aTable.Equals(lowerTableName))
                 {
