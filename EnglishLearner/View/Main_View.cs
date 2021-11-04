@@ -6,7 +6,7 @@ using Microsoft.Data.Sqlite; // NuGet package;
 namespace EnglishLearner
 {
     /*
-     * Created by Cole Lamers 
+     * Created by Cole Lamers, Eric Spoerl
      * Date: 2021-11-04
      * 
      * == Purpose ==
