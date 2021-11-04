@@ -20,13 +20,14 @@ namespace EnglishLearner
 
         public static void Load_Configuration(ref Configuration config)
         {
+            UniversalFunctions.LogToFile("Load_Configuration");
             try
             {
                 ProjectLogging.SetupConfigFile.LoadFromFile(ref config);
             } // try
             catch (Exception e)
             {
-                throw e;
+                UniversalFunctions.LogToFile("Load_Configuration failed. Reverting back to null config file...", e);
             } // catch; config is null can't be loaded
         } // function LoadConfiguration;
 
