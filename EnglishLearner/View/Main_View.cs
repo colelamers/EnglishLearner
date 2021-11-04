@@ -10,8 +10,6 @@ namespace EnglishLearner
      * Date: 2021-11-04
      * 
      * == Purpose ==
-     * hello world!
-     * TESTING 123!
      * This is where the primary input from our application will occur.
      * 
      * 
@@ -29,6 +27,10 @@ namespace EnglishLearner
             Console.WriteLine("Please provide a sentence for me to learn from:\n");
 
             string sentence = Console.ReadLine();
+
+            /*
+             * You can modify anything below here to test your code
+             */
 
             if (SentenceFunctions.Is_Sentence(sentence))
             {
