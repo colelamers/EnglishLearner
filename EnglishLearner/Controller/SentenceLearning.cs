@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EnglishLearner.Controller
+namespace EnglishLearner
 {
     /*
      * Created by Cole Lamers
