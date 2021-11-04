@@ -12,7 +12,7 @@ namespace EnglishLearner
      * == Purpose ==
      * This is where the primary input from our application will occur.
      * Coles additional test
-     * Coles Change #1
+     * Eric's change #1
      */
 
     class Main_View
