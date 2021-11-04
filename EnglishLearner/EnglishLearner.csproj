@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <Reference Include="ProjectLogging">
-      <HintPath>bin\Debug\netcoreapp3.1\ProjectLogging.dll</HintPath>
+      <HintPath>B:\BackupDriveDataRoot\Programming\repos\ProjectLogging\bin\Debug\netstandard2.0\ProjectLogging.dll</HintPath>
     </Reference>
   </ItemGroup>
 
