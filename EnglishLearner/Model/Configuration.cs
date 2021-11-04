@@ -4,6 +4,15 @@ using System.Text;
 
 namespace EnglishLearner
 {
+    /*
+     * Created by Cole Lamers 
+     * Date: 2021-11-04
+     * 
+     * == Purpose ==
+     * Contains the configuration data for the program
+     * 
+     * 
+     */
     public class Configuration
     {
         //TODO: --1-- need to build up the config file as we go
@@ -14,10 +23,10 @@ namespace EnglishLearner
         public List<string> ProjectFolderPaths { get; set; }
         public Configuration()
         {
-            DictionaryPath = "";
-            ConfigPath = "";
-            SolutionDirectory = "";
-            ExitCode = 1;
+            this.DictionaryPath = "";
+            this.ConfigPath = "";
+            this.SolutionDirectory = "";
+            this.ExitCode = 0;
         } // constructor; default
     }
 }

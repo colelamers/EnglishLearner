@@ -4,7 +4,16 @@ using System.Text;
 
 namespace EnglishLearner
 {
-    // TODO: --1-- the elements of this class may need to be static so they are ALWAYS the same in any child classes that extend it. REMEMBER THIS FOR LATER!
+   /*
+    * Created by Cole Lamers 
+    * Date: 2021-11-04
+    * 
+    * == Purpose ==
+    * 
+    * 
+    * 
+    */
+
     class Brain
     {
         // TODO: --1-- gotta implement a Tree in here for it access the data
