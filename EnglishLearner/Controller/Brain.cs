@@ -23,6 +23,7 @@ namespace EnglishLearner
         // TODO: --1-- something like this? List<Func<string, string>> item = new List<Func<string, string>();
         // TODO: --1-- need implement functional logic here and establish what a "Brain" is comprised of. This will control the logic of phrases and handle parsing, etc.
         public List<Phrase> Sentence_Memory { get; set; }
+        public Dictionary<string, TreeNode> First_Word_Nodes { get; set; }
 
         public Brain()
         {

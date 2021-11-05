@@ -62,5 +62,18 @@ namespace EnglishLearner
                 throw e;
             } // catch
         } // function Split_Paragraph
+
+        
+        public static string ToProper(string word)
+        {
+            // TODO: --1-- make a function that makes a word First letter captialized
+            return word;
+        }
+
+        public static string[] RemovePunctuation(string[] sentence)
+        {
+            // TODO: --1-- make a functiont that removes the { ., !, ?  } at the end of a sentence, but also then retains it or something...idk. ignore it for now but make a note of it either way.
+            return sentence;
+        }
     }
 }
