@@ -36,6 +36,11 @@ namespace EnglishLearner
             this.Phrase_Punctuation = interpretPunctuation();
         } // constructor; Phrase
 
+        //Run queries to find out if an object in the sentece is subject, verb, object, and any punctuation.
+        //Test out the insertInto function within the SQLite Actions tab to handle words not found in the database
+
+
+
         private char interpretPunctuation()
         {
             char the_punctuation = ' ';
@@ -66,19 +71,25 @@ namespace EnglishLearner
             return the_object;
         } // function; interpretObject
 
-        private bool interpretSubjectPlural()
-        {
-            // TODO: --1-- utilize this function as a basis for other functions when determining tense and other things
-            // TODO: --1-- this is not correct because words like "US, zealous, cross, pelvis, taxes, grass." Can add a check for 's, ' at the end, double 's', -ous, -ass/-ess/-iss/-oss/-uss
-            char[] letterArray = this.Phrase_Subject.ToLower().ToCharArray();
-            // TODO: --1-- we could also utilize regex for this instead
-            // NOTE: char array is faster than looping through the entire array since we know that plurality in English is defined by the last few characters typically when context is not established
-            if (letterArray[letterArray.Length - 1].Equals('s'))
-            {
-                return true;
-            } // if;
 
-            return false;
-        } // function; interpretSubjectPlural
+
+
+
+
+        // TODO: --4-- Touch at a later time
+        //private bool interpretSubjectPlural()
+        //{
+        //    // TODO: --4-- utilize this function as a basis for other functions when determining tense and other things
+        //    // TODO: --4-- this is not correct because words like "US, zealous, cross, pelvis, taxes, grass." Can add a check for 's, ' at the end, double 's', -ous, -ass/-ess/-iss/-oss/-uss
+        //    char[] letterArray = this.Phrase_Subject.ToLower().ToCharArray();
+        //    // TODO: --4-- we could also utilize regex for this instead
+        //    // NOTE: char array is faster than looping through the entire array since we know that plurality in English is defined by the last few characters typically when context is not established
+        //    if (letterArray[letterArray.Length - 1].Equals('s'))
+        //    {
+        //        return true;
+        //    } // if;
+
+        //    return false;
+        //} // function; interpretSubjectPlural
     }
 }
