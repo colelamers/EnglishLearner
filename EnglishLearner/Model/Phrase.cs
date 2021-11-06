@@ -25,6 +25,7 @@ namespace EnglishLearner
         //public bool Phrase_Subject_Plural { get; set; } // TODO: --4-- for future implementation
         public char Phrase_Punctuation { get; set; }
         //public List<object> RulesLearned = new List<object>(); // TODO: --1-- this will need to be revised to contain Func or delegates. this will things the brain learns and knows to apply processing logic to for additional setences. Talk to Cole for more info.
+        public Dictionary<string, bool> Phrase_Legalties { get; set; }
 
         public Phrase(string sentence)
         {
@@ -34,7 +35,19 @@ namespace EnglishLearner
             this.Phrase_Verb = interpretVerb();
             this.Phrase_Object = interpretObject();
             this.Phrase_Punctuation = interpretPunctuation();
+            this.Phrase_Legalties = interpretLegalities();
         } // constructor; Phrase
+
+        private Dictionary<string, bool> interpretLegalities()
+        {
+            // TODO: --1-- interpretLegality logic here; is the word legal (meaning proper English)
+            /*
+             * Legality of a term is determined by the context of the sentence. Typically can only be determined by a native;
+             */
+            // this.Phrase_Legalities.Add("Them", true); this word is legal
+            // this.Phrase_Legalities.Add("crazys", false); this word is illegal
+            return tof;
+        }
 
         private char interpretPunctuation()
         {

@@ -30,30 +30,31 @@ namespace EnglishLearner
             Console.WriteLine("Please provide a sentence for me to learn from:\n");
 
             string sentence = null;
-            Brain memory = new Brain();
 
             /*
              * You can modify anything below here to test your code
              */
-/*
-            _sql.ExecuteQuery("Select * from entries where word='aback'"); how to sql
+
+            _sql.ExecuteQuery("Select * from entries where word='Telephone'");
+
             foreach (DataRow n in _sql.ActiveQueryResults.Rows)
             {
                 var x = n["word"];
             }
-*/
+
 
             sentence = "The quick brown fox jumped over the lazy dog.";
 
             if (SentenceFunctions.Is_Sentence(sentence))
             {
-                memory.Sentence_Memory.Add(new Phrase(sentence));
+                var phr = new Phrase(sentence);
                 //var x = memory.Sentence_Memory[0].Phrase_Split_Sentence[0];
                 Tree xk = new Tree();
-                xk.Build_Tree(memory.Sentence_Memory[0].Phrase_Split_Sentence);
+                xk.Build_Tree(phr.Phrase_Split_Sentence);
 
                 Dictionary<string, Tree> treeDict = new Dictionary<string, Tree>();
                 treeDict.Add(xk.Root.Node_Word, xk);
+
 
                 // TODO: --1-- so if the first word already exists in the treeDictionary, either we strip it from the sentence passed in, or we utilize it
                 var p = treeDict["The"]; // because all first words will be the key, first words are assumed proper
@@ -63,17 +64,6 @@ namespace EnglishLearner
             {
 
             }
-
-            do
-            {
-            } while (!sentence.Equals(""));
-
-
-
-
-
-
-
             // TODO: --3-- consider adding a .where clause that ignores the extra folders we don't care about
         } // function Run;
 
