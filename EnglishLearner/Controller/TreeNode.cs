@@ -13,6 +13,8 @@ namespace EnglishLearner
      */
     class TreeNode
     {
+        // TODO: --3-- should probably be in model and not controller
+
         public string Node_Word { get; set; }
         public TreeNode Next_Node { get; set; } // For Traversal
         public Dictionary<string, TreeNode> Node_Children { get; set; } // string = key, TreeNode = new KvP list of potential nodes

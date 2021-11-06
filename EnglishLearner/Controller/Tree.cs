@@ -15,7 +15,7 @@ namespace EnglishLearner
     class Tree
     {
         public TreeNode Root, Current, Next;
-        //TODO: --1-- implement a dictionary of treenodes here too so that there is no root node, but various nodes that can be called based off the first one
+        // TODO: --3-- should probably be in model and not controller
 
         public Tree()
         {
