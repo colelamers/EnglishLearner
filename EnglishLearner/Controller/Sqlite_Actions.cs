@@ -49,7 +49,7 @@ namespace EnglishLearner
             this._sqlConnection = new SqliteConnection($"Data Source={SqlPath}\\{this.FileName}.db");
             GetDatabaseTables();
         } // constructor
-
+         
         /// <summary>
         /// Creates a table asking for what you'd like the table to be named. If the table exists, it returns. If the dictionary is empty, it returns.
         /// </summary>
