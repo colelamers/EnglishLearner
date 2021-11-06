@@ -14,6 +14,7 @@ namespace EnglishLearner
      */
     class Tree
     {
+        public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --1-- most likely will need this at each tree root for info about corresponding sentences
         public TreeNode Root, Current, Next;
         // TODO: --3-- should probably be in model and not controller
 
@@ -22,6 +23,11 @@ namespace EnglishLearner
             this.Root = null; // first word in a sentence
             this.Current = null;
             this.Next = null;
+        }
+
+        public void Build_Sentence_Into_Phrase()
+        {
+            // TODO: --1-- traverse a tree to build a sentence. then make a phrase and use that to return and pass in for the key to get info about the phrase
         }
 
         public void Build_Tree(string[] sentence)
@@ -46,7 +52,7 @@ namespace EnglishLearner
                     this.Current.Next_Node = newNode;
                 } // else; not root
             } // foreach; word in a sentence
-            this.Root.Next_Node = null; // TODO: --1-- i'm not sure if i should be doing this, but it empties it out once it's been filled so that traversal can occur again for the dictionaries
+            //this.Root.Next_Node = null; // TODO: --1-- i'm not sure if i should be doing this, but it empties it out once it's been filled so that traversal can occur again for the dictionaries
         } // function Build_Tree
 
         public void AppendDictionaries(string[] sentence)
