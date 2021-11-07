@@ -7,8 +7,6 @@ using System.Data;
 
 namespace EnglishLearner
 {
-
-    //Hunter was here
     /*
      * Created by Cole Lamers, Eric Spoerl
      * Date: 2021-11-04
@@ -31,42 +29,36 @@ namespace EnglishLearner
             StartupActions();
             Console.WriteLine("Please provide a sentence for me to learn from:\n");
 
-            string sentence = null;
+            string s1 = "The quick brown fox jumped over the lazy dog.";
+            string s2 = "the slow brown fox jumped over the lazy dog.";
+            string s3 = "The quick red fox jumped over the lazy dog.";
+            string s4 = "The quick brown turtle jumped over the lazy dog.";
+            string s5 = "The quick brown fox ran over the lazy dog.";
+            string s6 = "The quick brown fox jumped around the lazy dog.";
+            string s7 = "The quick brown fox jumped over that lazy dog.";
+            string s8 = "The quick brown fox jumped over the happy dog.";
+            string s9 = "The quick brown fox jumped over the lazy cat.";
+            string s10 = "A quick brown fox jumped over the lazy dog."; // TODO: --1-- need to perform the update based on root being different as well
 
-            /*
-             * You can modify anything below here to test your code
-             */
+            string[] sentences = { s1, s2, s3, s4, s5, s6, s7, s8, s9 };
+            Dictionary<string, Tree> treeDict = new Dictionary<string, Tree>(); // TODO: --3-- this may need to be stored in a brain class
 
-            _sql.ExecuteQuery("Select * from entries where word='Telephone'");
-
-            foreach (DataRow n in _sql.ActiveQueryResults.Rows)
+            foreach (string sp in sentences)
             {
-                var x = n["word"];
-            }
+                ReAdd:
+                var nsp = new Phrase(sp);
 
-
-            sentence = "The quick brown fox jumped over the lazy dog.";
-
-            if (SentenceFunctions.Is_Sentence(sentence))
-            {
-                var phr = new Phrase(sentence);
-                //var x = memory.Sentence_Memory[0].Phrase_Split_Sentence[0];
-                Tree xk = new Tree();
-                xk.Build_Tree(phr.Phrase_Split_Sentence);
-
-                Dictionary<string, Tree> treeDict = new Dictionary<string, Tree>();
-                treeDict.Add(xk.Root.Node_Word, xk);
-
-
-                // TODO: --1-- so if the first word already exists in the treeDictionary, either we strip it from the sentence passed in, or we utilize it
-                var p = treeDict["The"]; // because all first words will be the key, first words are assumed proper
-                //char[] inputCharArray = sentence.ToCharArray();
-            } 
-            else
-            {
+                try
+                {
+                    treeDict[nsp.Phrase_First_Word].DFS_Append(nsp.Phrase_Split_Sentence, treeDict[nsp.Phrase_First_Word].Root);
+                }
+                catch
+                {
+                    treeDict.Add(nsp.Phrase_First_Word, new Tree(nsp.Phrase_Split_Sentence));
+                    goto ReAdd; // goes to the same phrase again, but now after it has added the new root value
+                } // if the root word in the tree doesn't exist, make a new key
 
             }
-            // TODO: --3-- consider adding a .where clause that ignores the extra folders we don't care about
         } // function Run;
 
         #region Startup_Functions

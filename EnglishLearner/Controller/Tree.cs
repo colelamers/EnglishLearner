@@ -9,85 +9,85 @@ namespace EnglishLearner
      * Date: 2021-11-04
      * 
      * == Purpose ==
+     * To store sentence memories of sentences it has been taught. Future thoughts
+     * are to store additional data for each node of word information so that the 
+     * tree can do DFS or BFS traversal looking for additional words it could
+     * supplement in the event of an illegal or improper word.
      * 
-     * 
+     * Requires at least one word to traverse
      */
     class Tree
     {
-        public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --1-- most likely will need this at each tree root for info about corresponding sentences
-        public TreeNode Root, Current, Next;
-        // TODO: --3-- should probably be in model and not controller
+        public TreeNode Root = null, Current = null, Next = null;
 
-        public Tree()
-        {
-            this.Root = null; // first word in a sentence
-            this.Current = null;
-            this.Next = null;
-        }
+        //public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --3-- most likely will need this at each tree root for info about corresponding sentences
+        // TODO: --1-- should probably be in model and not controller. make a brain class again but contain the tree and certain functions?
+        // public List<string> Illegal_Terms { get; set; } // TODO: --4--  this will be when a tree traversal occurs, it will look to see if other nodes have things it can use for another sentence and add it in. If it doesn't make sense or is incorrect, we can provide input to let it know. DFS or BFS search.
+        // TODO: --4-- need to retain illegal values in nodes specifically because a single word does not negate the legitimacy of an entire sentence.
+        // TODO: --4-- add lists of known subject, verb, objects that it can interpret from if there is an illegal value somewhere.
+        // NOTE: Key based traversal is DFS, Deciding on which available child nodes 
 
-        public void Build_Sentence_Into_Phrase()
-        {
-            // TODO: --1-- traverse a tree to build a sentence. then make a phrase and use that to return and pass in for the key to get info about the phrase
-        }
-
-        public void Build_Tree(string[] sentence)
+        public Tree(string[] sentence)
         {
             foreach (string word in sentence)
             {
                 TreeNode newNode = new TreeNode(word);
-                if (this.Root == null)
-                {
-                    this.Root = newNode;
-                } // if; root is empty
-                else
+                if (this.Root != null)
                 {
                     this.Current = this.Root;
-                    this.Next = this.Current.Next_Node;
+                    this.Next = this.Current.Next;
                     while (this.Next != null)
                     {
                         this.Current = this.Next;
-                        this.Next = this.Current.Next_Node;
+                        this.Next = this.Current.Next;
                     }
-                    this.Current.Node_Children.Add(newNode.Node_Word, newNode);
-                    this.Current.Next_Node = newNode;
-                } // else; not root
+                    this.Current.Children.Add(newNode.Word, newNode);
+                    this.Current.Next = newNode;
+                } // if; root is not empty
+                else
+                {
+                    this.Root = newNode;
+                } // else; root is empty
             } // foreach; word in a sentence
-            //this.Root.Next_Node = null; // TODO: --1-- i'm not sure if i should be doing this, but it empties it out once it's been filled so that traversal can occur again for the dictionaries
-        } // function Build_Tree
+            this.Next = null;
+        } // Constructor
 
-        public void AppendDictionaries(string[] sentence)
+
+        public void DFS_Append(string[] sentence, TreeNode whichNode, int iterator = 1)
         {
-            // This function assumes that the sentence passed in contains the same root word as the current tree
-            // TODO: --1-- so here we need to do something similar to the build_tree, but it differs in that the starting node is different based on the keys. then the corresponding dictionaries get added to 
-
-            // i starts at 1 because we don't care about the first word since it's the tree root
-            for (int i = 1; i < sentence.Length; i++)
+            // TODO: --1-- what happens when we add the exact same phrase twice? need to check for that
+            try
             {
-                TreeNode newNode = new TreeNode(sentence[i]);
+                this.Current = whichNode;
+                this.Next = this.Current.Children[sentence[iterator]];
+                DFS_Append(sentence, this.Next, iterator + 1);
+            }
+            catch
+            {
+                //TreeNode newNode = new TreeNode(sentence[iterator]);
+                //this.Current.Children.Add(sentence[iterator], newNode);
+                this.Current = whichNode;
 
-                if (this.Root.Node_Children.ContainsKey(sentence[i]))
+                for (int i = iterator; i < sentence.Length; i++)
                 {
-                    this.Root.Node_Children[sentence[i]].Node_Children.Add(sentence[i], newNode);
-                }
+                    TreeNode newNode = new TreeNode(sentence[i]);
+                    this.Current.Children.Add(newNode.Word, newNode);
+                    this.Next = this.Current.Children[newNode.Word];
 
-                if (this.Root == null)
-                {
-                    this.Root = newNode;
-                } // if; root is empty
-                else
-                {
-                    this.Current = this.Root;
-                    this.Next = this.Current.Next_Node;
                     while (this.Next != null)
                     {
                         this.Current = this.Next;
-                        this.Next = this.Current.Next_Node;
-                    }
-                    this.Current.Node_Children.Add(newNode.Node_Word, newNode);
-                    this.Current.Next_Node = newNode;
-                } // else; not root
+                        this.Next = this.Current.Next;
+                    } // while
+                } // for; word in a sentence
             }
+        } // function DFS_Traversal; starts after root is chosen elsewhere
+/*
+        public void AppendTree(TreeNode whichNode)
+        {
+            TreeNode newNode = new TreeNode(sentence[iterator]);
+            this.Current.Children.Add(sentence[iterator], newNode);
         }
-
+*/
     } // Class Tree
 } // namespace
