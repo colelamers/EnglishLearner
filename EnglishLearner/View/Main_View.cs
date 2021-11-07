@@ -40,24 +40,24 @@ namespace EnglishLearner
             string s9 = "The quick brown fox jumped over the lazy cat.";
             string s10 = "A quick brown fox jumped over the lazy dog."; // TODO: --1-- need to perform the update based on root being different as well
 
-            string[] sentences = { s1, s2, s3, s4, s5, s6, s7, s8, s9 };
+            string[] sentences = { s1, s2, s3, s4, s5, s6, s7, s8, s9, s10 };
             Dictionary<string, Tree> treeDict = new Dictionary<string, Tree>(); // TODO: --3-- this may need to be stored in a brain class
 
             foreach (string sp in sentences)
             {
-                ReAdd:
                 var nsp = new Phrase(sp);
 
-                try
+                Tree test;
+                treeDict.TryGetValue(nsp.Phrase_First_Word, out test);
+
+                if (test != null)
                 {
                     treeDict[nsp.Phrase_First_Word].DFS_Append(nsp.Phrase_Split_Sentence, treeDict[nsp.Phrase_First_Word].Root);
                 }
-                catch
+                else
                 {
                     treeDict.Add(nsp.Phrase_First_Word, new Tree(nsp.Phrase_Split_Sentence));
-                    goto ReAdd; // goes to the same phrase again, but now after it has added the new root value
-                } // if the root word in the tree doesn't exist, make a new key
-
+                }
             }
         } // function Run;
 

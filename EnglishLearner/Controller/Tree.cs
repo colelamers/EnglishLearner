@@ -29,60 +29,92 @@ namespace EnglishLearner
 
         public Tree(string[] sentence)
         {
-            foreach (string word in sentence)
+            SetTreeRoot(sentence);
+            this.Current = this.Root;
+
+            for (int i = 1; i < sentence.Length; i++)
             {
-                TreeNode newNode = new TreeNode(word);
-                if (this.Root != null)
+                TreeNode newNode = new TreeNode(sentence[i]);
+                this.Current.Children.Add(newNode.Word, newNode);
+                this.Current.Children.TryGetValue(sentence[i], out this.Next);
+                while (this.Next != null)
                 {
-                    this.Current = this.Root;
-                    this.Next = this.Current.Next;
-                    while (this.Next != null)
-                    {
-                        this.Current = this.Next;
-                        this.Next = this.Current.Next;
-                    }
-                    this.Current.Children.Add(newNode.Word, newNode);
-                    this.Current.Next = newNode;
-                } // if; root is not empty
-                else
-                {
-                    this.Root = newNode;
-                } // else; root is empty
+                    this.Current = this.Next;
+                    this.Current.Children.TryGetValue(sentence[i], out this.Next);
+                }
             } // foreach; word in a sentence
             this.Next = null;
+            this.Current = null;
         } // Constructor
 
+        private void SetTreeRoot(string[] sentence)
+        {
+            this.Root = new TreeNode(sentence[0]);
+        } // function SetTreeRoot
+
+/*
+ * TODO: --1-- cole needs to fix. i was originally using the Next member of the TreeNode class and that should never have happened
+        public void DFS_Find_Word(string findThisWord)
+        {
+            // TODO: --1-- need to implement
+            List<object> occurances = new List<object>();
+
+            this.Current = this.Root;
+            this.Next = this.Current.Next;
+            while (this.Next != null)
+            {
+                this.Current = this.Next;
+                this.Next = this.Current.Next;// TODO: --1-- need to fix this. we don't want a next node in the TreeNode
+
+                if (this.Current.Word.Equals(findThisWord))
+                {
+                    // occurances.Add(this.Current.)
+                }
+            }
+
+            this.Next = null;
+            this.Current = null;
+        }
+*/
 
         public void DFS_Append(string[] sentence, TreeNode whichNode, int iterator = 1)
         {
-            // TODO: --1-- what happens when we add the exact same phrase twice? need to check for that
+            // TODO: --1-- when it checks the exact same sentence, it will generate an index out of bounds exception because once it gets to the last node, it will still be recursive so it will be at the max index + 1 when it does the final recursive call and will hit the OOB exception there
+            this.Current = whichNode;
+            this.Current.Children.TryGetValue(sentence[iterator], out this.Next);
             try
             {
-                this.Current = whichNode;
-                this.Next = this.Current.Children[sentence[iterator]];
-                DFS_Append(sentence, this.Next, iterator + 1);
-            }
-            catch
-            {
-                //TreeNode newNode = new TreeNode(sentence[iterator]);
-                //this.Current.Children.Add(sentence[iterator], newNode);
-                this.Current = whichNode;
-
-                for (int i = iterator; i < sentence.Length; i++)
+                if (this.Next != null)
                 {
-                    TreeNode newNode = new TreeNode(sentence[i]);
-                    this.Current.Children.Add(newNode.Word, newNode);
-                    this.Next = this.Current.Children[newNode.Word];
-
-                    while (this.Next != null)
+                    DFS_Append(sentence, this.Next, iterator + 1);
+                } // if; recursively dive through tree
+                else
+                {
+                    for (int i = iterator; i < sentence.Length; i++)
                     {
-                        this.Current = this.Next;
-                        this.Next = this.Current.Next;
-                    } // while
-                } // for; word in a sentence
+                        TreeNode newNode = new TreeNode(sentence[i]);
+                        this.Current.Children.Add(newNode.Word, newNode);
+                        this.Next = this.Current.Children[newNode.Word];
+
+                        while (this.Next != null)
+                        {
+                            this.Current = this.Next;
+                            this.Current.Children.TryGetValue(sentence[i], out this.Next);
+                            //this.Next = this.Current.Next;// TODO: --1-- need to fix this. we don't want a next node in the TreeNode
+                        } // while
+                    } // for; word in a sentence
+                } // else; append tree
+                this.Next = null;
+                this.Current = null;
+            }
+            catch(Exception e)
+            {
+                // TODO: --4-- for my logging program, add a function that converts enumerables into a string so i can just one line add all parameters to the log file
+                UniversalFunctions.LogToFile("Error", e);
             }
         } // function DFS_Traversal; starts after root is chosen elsewhere
 /*
+ * TODO: --1-- would like to split up the Traversal and Appending so that we can grab specific nodes and alter them. Currently we can only append at specific keys/child-nodes.
         public void AppendTree(TreeNode whichNode)
         {
             TreeNode newNode = new TreeNode(sentence[iterator]);
