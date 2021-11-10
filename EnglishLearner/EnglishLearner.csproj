@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="bin\Debug\netcoreapp3.1\EpubSharp.dll" />
     <None Include="bin\Debug\netcoreapp3.1\ProjectLogging.dll" />
   </ItemGroup>
 
@@ -14,6 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="EpubSharp">
+      <HintPath>bin\Debug\netcoreapp3.1\EpubSharp.dll</HintPath>
+    </Reference>
     <Reference Include="ProjectLogging">
       <HintPath>bin\Debug\netcoreapp3.1\ProjectLogging.dll</HintPath>
     </Reference>

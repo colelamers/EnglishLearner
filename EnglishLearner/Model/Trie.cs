@@ -18,7 +18,9 @@ namespace EnglishLearner
      */
     class Trie
     {
-        public TrieNode Root = null, Current = null, Next = null;
+        public TrieNode Root = null;
+        private TrieNode Current = null, Next = null;
+
         public List<TrieNode> listOfNodes = new List<TrieNode>();
         //public int Depth = 0; // TODO: --3-- implement a depth/height/length/size?
         //public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --3-- most likely will need this at each tree root for info about corresponding sentences
@@ -60,11 +62,8 @@ namespace EnglishLearner
             this.Root = new TrieNode(sentence[0]);
         } // function SetTreeRoot
 
-        // TODO: --1-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
-
-
-        // TODO: --1-- cole needs to fix. i was originally using the Next member of the TreeNode class and that should never have happened
-
+        // TODO: --3-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
+        // TODO: --3-- alter node function? might want to keep track of height/size/depth then so we can say "grab this phrase, and modify this word at height/depth 'x'". Would need a delete and rebuild node then.
         public void Find(string findThisWord)
         {
             DFS_Find_Word(findThisWord, this.Root);
@@ -88,6 +87,7 @@ namespace EnglishLearner
                     // TODO: --3-- add a delegate function in here? that way if we want to, we can pass in different tasks like "Print everything" or "Find all of these words" or "find the first instance of this word" or "get the height of this word"
                 } // if; next is not null
             } // foreach; key
+            this.Next = null;
         } // function DFS_Find_Word
 
         public void Append(string[] sentence)
@@ -98,10 +98,11 @@ namespace EnglishLearner
         private void DFS_Append(string[] sentence, TrieNode whichNode, int iterator = 1)
         {
             // TODO: --1-- when it checks the exact same sentence, it will generate an index out of bounds exception because once it gets to the last node, it will still be recursive so it will be at the max index + 1 when it does the final recursive call and will hit the OOB exception there. if we can resolve this, we can ditch the try-catch block. ??? Could do an array comparison but they'd have to always be consistent.
-            this.Current = whichNode;
-            this.Current.Children.TryGetValue(sentence[iterator], out this.Next);
             try
             {
+                this.Current = whichNode;
+                this.Current.Children.TryGetValue(sentence[iterator], out this.Next);
+
                 if (this.Next != null)
                 {
                     DFS_Append(sentence, this.Next, iterator + 1);
@@ -131,13 +132,5 @@ namespace EnglishLearner
                 UniversalFunctions.LogToFile("Error", e);
             } // catch
         } // function DFS_Traversal; starts after root is chosen elsewhere
-/*
- * TODO: --1-- would like to split up the Traversal and Appending so that we can grab specific nodes and alter them. Currently we can only append at specific keys/child-nodes.
-        public void AppendTree(TreeNode whichNode)
-        {
-            TreeNode newNode = new TreeNode(sentence[iterator]);
-            this.Current.Children.Add(sentence[iterator], newNode);
-        }
-*/
     } // Class Tree
 } // namespace
