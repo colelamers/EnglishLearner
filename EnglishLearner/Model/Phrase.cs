@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace EnglishLearner
 {
@@ -31,8 +32,9 @@ namespace EnglishLearner
         public Phrase(string sentence)
         {
             // TODO: --3-- could make all interpret functions asyncronously running for each phrase initialized. could speed things up down the road.
+
             this.Phrase_Sentence = sentence;
-            this.Phrase_Split_Sentence = sentence.Split(" ");
+            this.Phrase_Split_Sentence = interpretSplitSentence();
             this.Phrase_First_Word = interpretFirstWord(); // relies on Phrase_Split_Sentence to occur before this
             this.Phrase_Subject = interpretSubject();
             this.Phrase_Verb = interpretVerb();
@@ -41,8 +43,18 @@ namespace EnglishLearner
             this.Phrase_Legalties = interpretLegalities();
         } // constructor; Phrase
 
+        private string[] interpretSplitSentence()
+        {
+            string[] array = this.Phrase_Sentence.Split(" ");
+            int num;
+            array = array.Where(x => !string.IsNullOrWhiteSpace(x)).Where(x => !int.TryParse(x, out num)).ToArray();
+
+            return array;
+        }
+
         private string interpretFirstWord()
         {
+            // TODO: --1-- running into an issue when parsing the split sentences to find the first letter a space or a number. also if it's only one word. always causes the program to crash around here.
             char[] capitalizedFirstLetter = this.Phrase_Split_Sentence[0].ToCharArray();
             capitalizedFirstLetter[0] = char.ToUpper(capitalizedFirstLetter[0]);
             return new string(capitalizedFirstLetter);

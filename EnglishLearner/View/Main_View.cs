@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite; // NuGet package;
 using System.Data;
+using EpubSharp;
 
 namespace EnglishLearner
 {
@@ -21,7 +22,7 @@ namespace EnglishLearner
     class Main_View
     {
         Configuration _config = null; // TODO: --1-- need to determine where this should live and be addressed
-        Sqlite_Actions _sql; // talbe is called 'entries'
+        Sqlite_Actions _sql; // table is called 'entries'
 
         private void Run()
         {
@@ -52,24 +53,32 @@ namespace EnglishLearner
             string[] sentences = { s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19 };
             Dictionary<string, Trie> trieDict = new Dictionary<string, Trie>(); // TODO: --3-- this may need to be stored in a brain class
 
-            foreach (string sp in sentences)
+            EpubBook book = EpubReader.Read($"{_config.ProjectFolderPaths.ElementAt(0)}\\Burmese Days - George Orwell.epub");
+            //char[] splitPunctuation = new char { '.', '!', '?' };
+            string[] text = book.ToPlainText().Replace("\n", "").Split(new char[] { '.', '!', '?' });
+            //string[] words = book.ToPlainText().Split(" ");
+
+            foreach (string sp in text)
             {
-                var nsp = new Phrase(sp);
-
-                Trie test;
-                trieDict.TryGetValue(nsp.Phrase_First_Word, out test);
-
-                if (test != null)
+                if (sp.Length > 1)
                 {
-                    trieDict[nsp.Phrase_First_Word].Append(nsp.Phrase_Split_Sentence);
-                }
-                else
-                {
-                    trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp.Phrase_Split_Sentence));
+                    var nsp = new Phrase(sp);
+
+                    Trie test;
+                    trieDict.TryGetValue(nsp.Phrase_First_Word, out test);
+
+                    if (test != null)
+                    {
+                        trieDict[nsp.Phrase_First_Word].Append(nsp.Phrase_Split_Sentence);
+                    }
+                    else
+                    {
+                        trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp.Phrase_Split_Sentence));
+                    }
                 }
             }
 
-            trieDict["The"].Find("cat");
+            var n = trieDict.OrderBy(x => x.Key); // (x => x.Key);
         } // function Run;
 
         #region Startup_Functions
