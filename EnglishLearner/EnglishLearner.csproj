@@ -8,6 +8,7 @@
   <ItemGroup>
     <None Include="bin\Debug\netcoreapp3.1\EpubSharp.dll" />
     <None Include="bin\Debug\netcoreapp3.1\ProjectLogging.dll" />
+    <None Include="bin\englishlearnersavestate.bin" />
   </ItemGroup>
 
   <ItemGroup>
