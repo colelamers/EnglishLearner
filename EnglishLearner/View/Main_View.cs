@@ -23,6 +23,7 @@ namespace EnglishLearner
     {
         Configuration _config = null; // TODO: --1-- need to determine where this should live and be addressed
         Sqlite_Actions _sql; // table is called 'entries'
+        Dictionary<string, Trie> trieDict = new Dictionary<string, Trie>(); // TODO: --3-- this may need to be stored in a brain class
 
         private void Run()
         {
@@ -51,34 +52,35 @@ namespace EnglishLearner
             string s19 = "The quick brown fox skipped over the lazy cat.";
 
             string[] sentences = { s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19 };
-            Dictionary<string, Trie> trieDict = new Dictionary<string, Trie>(); // TODO: --3-- this may need to be stored in a brain class
 
             EpubBook book = EpubReader.Read($"{_config.ProjectFolderPaths.ElementAt(0)}\\Burmese Days - George Orwell.epub");
             //char[] splitPunctuation = new char { '.', '!', '?' };
             string[] text = book.ToPlainText().Replace("\n", "").Split(new char[] { '.', '!', '?' });
             //string[] words = book.ToPlainText().Split(" ");
 
-            foreach (string sp in text)
+            if (!(trieDict.Count > 0))
             {
-                if (sp.Length > 1)
+                foreach (string sp in text)
                 {
-                    var nsp = new Phrase(sp);
-
-                    Trie test;
-                    trieDict.TryGetValue(nsp.Phrase_First_Word, out test);
-
-                    if (test != null)
+                    if (sp.Length > 1)
                     {
-                        trieDict[nsp.Phrase_First_Word].Append(nsp.Phrase_Split_Sentence);
-                    }
-                    else
-                    {
-                        trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp.Phrase_Split_Sentence));
+                        var nsp = new Phrase(sp);
+
+                        Trie test;
+                        trieDict.TryGetValue(nsp.Phrase_First_Word, out test);
+
+                        if (test != null)
+                        {
+                            trieDict[nsp.Phrase_First_Word].Append(nsp.Phrase_Split_Sentence);
+                        }
+                        else
+                        {
+                            trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp.Phrase_Split_Sentence));
+                        }
                     }
                 }
+                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(0) + $"\\{this._config.SaveFileName}", this.trieDict);
             }
-
-            var n = trieDict.OrderBy(x => x.Key); // (x => x.Key);
         } // function Run;
 
         #region Startup_Functions
@@ -90,6 +92,7 @@ namespace EnglishLearner
             if (this._config != null)
             {
                 this._sql = new Sqlite_Actions(_config.SolutionDirectory + "\\Data", "Dictionary");
+                this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(0) + $"\\{_config.SaveFileName}");
             } // if; config is empty or does not exist, it will create it and then save it
             else
             {
@@ -97,12 +100,11 @@ namespace EnglishLearner
                 this._config.ConfigPath = "Cole Test";
                 this._config.ExitCode = 0;
                 this._config.SolutionDirectory = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Directory.GetCurrentDirectory())));
-                this._sql = new Sqlite_Actions(_config.SolutionDirectory + "\\Data", "Dictionary");
-                this._config.ProjectFolderPaths = Directory.GetDirectories(_config.SolutionDirectory)
+                this._sql = new Sqlite_Actions(this._config.SolutionDirectory + "\\Data", "Dictionary");
+                this._config.ProjectFolderPaths = Directory.GetDirectories(this._config.SolutionDirectory)
                     .Select(d => new { Attr = new DirectoryInfo(d).Attributes, Dir = d })
                     .Select(x => x.Dir)
                     .ToList(); // Gives us the exact directory paths of all the folders within the the program.
-
                 UniversalFunctions.Save_Configuration(ref this._config);
             }
 

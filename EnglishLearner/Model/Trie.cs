@@ -16,6 +16,7 @@ namespace EnglishLearner
      * 
      * Requires at least one word to traverse
      */
+    [Serializable]
     class Trie
     {
         public TrieNode Root = null;

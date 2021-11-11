@@ -11,6 +11,7 @@ namespace EnglishLearner
      * Holds the nodes for the trees
      * 
      */
+    [Serializable]
     class TrieNode
     {
         // TODO: --3-- should probably be in model and not controller
