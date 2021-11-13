@@ -54,6 +54,7 @@ namespace EnglishLearner
             _debuglog.LogAction($"{whatToLog}{ex}");
         } // function LogToFile; easy exception add to logging
 
+        // TODO: --3-- consider saving each sentence in a file and append it to each line. that way you can still read that in if something were to happen to the binary data
         public static void SaveToBinaryFile<T>(string filePath, T objectToWrite)
         {
             LogToFile("SaveToBinaryFile called...");

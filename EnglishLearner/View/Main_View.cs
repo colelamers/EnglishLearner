@@ -27,6 +27,7 @@ namespace EnglishLearner
 
         private void Run()
         {
+            // TODO: --3-- trap in a loop to take user input and other things
             UniversalFunctions.LogToFile("Function Run called...");
             StartupActions();
             Console.WriteLine("Please provide a sentence for me to learn from:\n");
@@ -79,7 +80,7 @@ namespace EnglishLearner
                         }
                     }
                 }
-                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(0) + $"\\{this._config.SaveFileName}", this.trieDict);
+                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
             }
         } // function Run;
 
@@ -92,7 +93,7 @@ namespace EnglishLearner
             if (this._config != null)
             {
                 this._sql = new Sqlite_Actions(_config.SolutionDirectory + "\\Data", "Dictionary");
-                this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(0) + $"\\{_config.SaveFileName}");
+                this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
             } // if; config is empty or does not exist, it will create it and then save it
             else
             {
