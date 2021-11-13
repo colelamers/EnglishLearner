@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
@@ -30,6 +30,7 @@ namespace EnglishLearner
         //public bool Phrase_Subject_Plural { get; set; } // TODO: --4-- for future implementation
         public char Phrase_Punctuation { get; set; }
         //public List<object> RulesLearned = new List<object>(); // TODO: --1-- this will need to be revised to contain Func or delegates. this will things the brain learns and knows to apply processing logic to for additional setences. Talk to Cole for more info.
+        // TODO: --1-- will need to make functions asyncronous so that they run independent of new Phrases being created.
         public Dictionary<string, bool> Phrase_Legalties { get; set; }
 
         public Phrase(string sentence)
@@ -81,7 +82,6 @@ namespace EnglishLearner
         //Run queries to find out if an object in the sentece is subject, verb, object, and any punctuation.
         //Test out the insertInto function within the SQLite Actions tab to handle words not found in the database
 
-
         //How do we want to interpret this????
         private char interpretPunctuation()
         {
@@ -90,8 +90,6 @@ namespace EnglishLearner
             //{
             //    array[i].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             //}
-
-
             // TODO: --1-- need to remove the punctuation from the sentence as well
             // TODO: --1-- interpretPunctuation logic here
             return the_punctuation;
