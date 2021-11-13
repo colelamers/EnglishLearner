@@ -31,14 +31,16 @@ namespace EnglishLearner
         // TODO: --4-- add lists of known subject, verb, objects that it can interpret from if there is an illegal value somewhere.
         // TODO: --1-- were going to want the program to learn from a pattern of types of words. as it builds up the amount of those patterns that are acceptable, it will inference those as appropriate word order patterns that it can speak in other ways with other words of that type. So like a list or something that is ADV-N-V-P-C-P-V, PN-C-ADJ-V-N, etc
         // NOTE: Key based traversal is DFS, Deciding on which available child nodes 
+        // TODO: --1-- to get sibling nodes at that level, you'll need to grab all the parent keys and the parent dictionary at each child node though...hmm, and point to the same dictionary of the parent node to grab/search a sibling
+        // TODO: --1-- look into an adjacency matrix
 
         public Trie(string[] sentence)
         {
-            // TODO: --3-- instead of the sentence array, pass in the phrase, then we can retain the phrases at each tree root
+            // TODO: --1-- instead of the sentence array, pass in the phrase, then we can retain the phrases at each tree root
             UniversalFunctions.LogToFile("Tree Constructor called...");
             SetTreeRoot(sentence);
-            this.Current = this.Root;
 
+            this.Current = this.Root;
             for (int i = 1; i < sentence.Length; i++)
             {
                 TrieNode newNode = new TrieNode(sentence[i]);
@@ -49,8 +51,8 @@ namespace EnglishLearner
                 {
                     this.Current = this.Next;
                     this.Current.Children.TryGetValue(sentence[i], out this.Next);
-                } // while;
-            } // foreach; word in a sentence
+                } // while
+            } // for; word in a sentence
 
             // TODO: --3-- not sure these are needed
             this.Next = null;
@@ -72,6 +74,7 @@ namespace EnglishLearner
 
         private void DFS_Find_Word(string findThisWord, TrieNode whichNode)
         {
+            UniversalFunctions.LogToFile("DFS_Find_Word called...");
             Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
 
             foreach (string key in nodeKeys)

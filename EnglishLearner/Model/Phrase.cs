@@ -27,6 +27,7 @@ namespace EnglishLearner
         //public bool Phrase_Subject_Plural { get; set; } // TODO: --4-- for future implementation
         public char Phrase_Punctuation { get; set; }
         //public List<object> RulesLearned = new List<object>(); // TODO: --1-- this will need to be revised to contain Func or delegates. this will things the brain learns and knows to apply processing logic to for additional setences. Talk to Cole for more info.
+        // TODO: --1-- will need to make functions asyncronous so that they run independent of new Phrases being created.
         public Dictionary<string, bool> Phrase_Legalties { get; set; }
 
         public Phrase(string sentence)
