@@ -136,33 +136,27 @@ namespace EnglishLearner
 
                     using (var reader = command.ExecuteReader())
                     {
-                        try
+                        for (int i = 0; i < reader.VisibleFieldCount; i++)
                         {
+                            this.ActiveQueryResults.Columns.Add(reader.GetName(i));
+                        } // for; gets column headers
+
+                        while (reader.Read())
+                        {
+                            DataRow dRow = this.ActiveQueryResults.NewRow();
+
                             for (int i = 0; i < reader.VisibleFieldCount; i++)
                             {
-                                this.ActiveQueryResults.Columns.Add(reader.GetName(i));
-                            } // for; gets column headers
-
-                            while (reader.Read())
-                            {
-                                DataRow dRow = this.ActiveQueryResults.NewRow();
-
-                                for (int i = 0; i < reader.VisibleFieldCount; i++)
-                                {
-                                    dRow[reader.GetName(i)] = reader.GetString(i);
-                                } // for; iterate columns
-                                this.ActiveQueryResults.Rows.Add(dRow);
-                            } // while; iterate rows
-                        } // try;
-                        catch (Exception e)
-                        {
-                            _debugLogging.LogAction($"Error: {e}");
-                        } // catch;
+                                dRow[reader.GetName(i)] = reader.GetString(i);
+                            } // for; iterate columns
+                            this.ActiveQueryResults.Rows.Add(dRow);
+                        } // while; iterate rows
                     } // using; ExecuteReader
                 } // using; sqlconnection
             } // try;
             catch (Exception e)
             {
+                this.ActiveQueryResults = null;
                 _debugLogging.LogAction($"Error: {e}");
             } // catch;
         } // function PerformCommand;

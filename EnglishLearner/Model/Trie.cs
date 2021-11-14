@@ -100,44 +100,36 @@ namespace EnglishLearner
         private void DFS_Append(string[] sentence, TrieNode whichNode, int iterator = 1)
         {
             // TODO: --1-- when it checks the exact same sentence, it will generate an index out of bounds exception because once it gets to the last node, it will still be recursive so it will be at the max index + 1 when it does the final recursive call and will hit the OOB exception there. if we can resolve this, we can ditch the try-catch block. ??? Could do an array comparison but they'd have to always be consistent.
-            try
+
+            if (sentence.Length > iterator)
             {
-                if (sentence.Length > iterator)
+                this.Current = whichNode;
+                this.Current.Children.TryGetValue(sentence[iterator], out this.Next);
+
+                if (this.Next != null)
                 {
-
-                    this.Current = whichNode;
-                    this.Current.Children.TryGetValue(sentence[iterator], out this.Next);
-
-                    if (this.Next != null)
+                    DFS_Append(sentence, this.Next, iterator + 1);
+                } // if; recursively dive through tree
+                else
+                {
+                    for (int i = iterator; i < sentence.Length; i++)
                     {
-                        DFS_Append(sentence, this.Next, iterator + 1);
-                    } // if; recursively dive through tree
-                    else
-                    {
-                        for (int i = iterator; i < sentence.Length; i++)
+                        TrieNode newNode = new TrieNode(sentence[i], i);
+                        this.Current.Children.Add(newNode.Word, newNode);
+                        this.Next = this.Current.Children[newNode.Word];
+                        this.ChildNodeCount++;
+
+                        while (this.Next != null)
                         {
-                            TrieNode newNode = new TrieNode(sentence[i], i);
-                            this.Current.Children.Add(newNode.Word, newNode);
-                            this.Next = this.Current.Children[newNode.Word];
-                            this.ChildNodeCount++;
-
-                            while (this.Next != null)
-                            {
-                                this.Current = this.Next;
-                                this.Current.Children.TryGetValue(sentence[i], out this.Next);
-                                //this.Next = this.Current.Next;// TODO: --1-- need to fix this. we don't want a next node in the TreeNode
-                            } // while
-                        } // for; word in a sentence
-                    } // else; append tree
-                    this.Next = null;
-                    this.Current = null;
-                }
-            } // try
-            catch(Exception e)
-            {
-                // TODO: --4-- for my logging program, add a function that converts enumerables into a string so i can just one line add all parameters to the log file
-                UniversalFunctions.LogToFile("Error", e);
-            } // catch
+                            this.Current = this.Next;
+                            this.Current.Children.TryGetValue(sentence[i], out this.Next);
+                            //this.Next = this.Current.Next;// TODO: --1-- need to fix this. we don't want a next node in the TreeNode
+                        } // while
+                    } // for; word in a sentence
+                } // else; append tree 
+                this.Next = null;
+                this.Current = null;
+            } // if; iterator == sentence word length, that means everything is a duplicate
         } // function DFS_Traversal; starts after root is chosen elsewhere
     } // Class Tree
 } // namespace

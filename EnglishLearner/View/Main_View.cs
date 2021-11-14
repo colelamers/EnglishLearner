@@ -17,9 +17,9 @@ namespace EnglishLearner
      * This is where the primary input from our application will occur.
      * The primary goal for this for the final is to develop an agent that learns from user input/a data source of sentences and
      * can learn to speak based off of that information utilizing a tree.
-     * SQLite database is rudimentary at best and may not have the correct 
+     * SQLite database is rudimentary at best and may not have the correct info
      */
-
+    // TODO: --1-- OPTIMIZATIONS WILL BE NECESSARY LATER ON 
     class Main_View
     {
         Configuration _config = null; // TODO: --1-- need to determine where this should live and be addressed
@@ -67,21 +67,21 @@ namespace EnglishLearner
 
             DateTime startTime = DateTime.Now; // DO NOT DELETE; logs time to complete
 
+            // Loads in the Trie Data. Do not do until we finalize the Phrase class
+            //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
+
             foreach (string word in sentences)
             {
                 if (word.Length > 1) // Catches for blanks or empty strings
                 {
                     try
                     {
-                        DateTime xphrase = DateTime.Now;
                         var nsp = new Phrase(word, _config.SolutionDirectory + "\\Data");
-                        UniversalFunctions.LogToFile("Phrase Time", xphrase);
 
-                        DateTime trie = DateTime.Now;
-                        Trie test;
-                        trieDict.TryGetValue(nsp.Phrase_First_Word, out test);
+                        Trie trieRoot;
+                        trieDict.TryGetValue(nsp.Phrase_First_Word, out trieRoot);
 
-                        if (test != null)
+                        if (trieRoot != null)
                         {
                             trieDict[nsp.Phrase_First_Word].Append(nsp);
                         }
@@ -89,7 +89,6 @@ namespace EnglishLearner
                         {
                             trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp));
                         }
-                        UniversalFunctions.LogToFile("Add/Append Trie Time", trie);
                     }
                     catch (Exception e)
                     {
@@ -97,7 +96,7 @@ namespace EnglishLearner
                     }
                 } // if;
             } // foreach
-              //UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
+              UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
 
             UniversalFunctions.LogToFile($"Time to Complete Trie", startTime);
         } // function Run;
@@ -110,8 +109,8 @@ namespace EnglishLearner
 
             if (this._config != null)
             {
-                //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
-            } // if; config is empty or does not exist, it will create it and then save it
+                // TODO: --1-- not sure what to do here
+            } // if; config is not null
             else
             {
                 this._config = new Configuration();

@@ -169,7 +169,7 @@ namespace EnglishLearner
             char[] wordPattern = new char[sentence.Length];
 
             Sqlite_Actions _sql = new Sqlite_Actions(configPath, "Dictionary");
-            string buildQuery = $"SELECT DISTINCT word, wordtype FROM entries WHERE word in ('{sentence[0]}'";
+            string buildQuery = $"SELECT DISTINCT word, wordtype FROM entries WHERE word in('{sentence[0]}'";
 
             for (int i = 1; i < sentence.Length; i++)
             {
@@ -179,7 +179,7 @@ namespace EnglishLearner
 
             _sql.ExecuteQuery(@$"{buildQuery}");
 
-            if (_sql.ActiveQueryResults.Rows != null)
+            if (_sql.ActiveQueryResults?.Rows.Count > 0)
             {
                 foreach (DataRow dRow in _sql.ActiveQueryResults.Rows)
                 {
