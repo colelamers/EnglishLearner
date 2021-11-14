@@ -44,15 +44,36 @@ namespace EnglishLearner
             } // catch
         } // function SaveConfiguration;
 
+        /// <summary>
+        /// Just logs the string literal
+        /// </summary>
+        /// <param name="whatToLog"></param>
         public static void LogToFile(string whatToLog)
         {
-            _debuglog.LogAction(whatToLog);
-        } // function LogToFile;
+            _debuglog.LogAction(@$"{whatToLog}");
+        }
 
+        /// <summary>
+        /// Log data with exception. Colon comes after whatToLog.
+        /// </summary>
+        /// <param name="whatToLog"></param>
+        /// <param name="ex"></param>
         public static void LogToFile(string whatToLog, Exception ex)
         {
-            _debuglog.LogAction($"{whatToLog}{ex}");
-        } // function LogToFile; easy exception add to logging
+            _debuglog.LogAction($"{whatToLog}: {ex}");
+        }
+
+        /// <summary>
+        /// Log speed to perform function from start of tracking.
+        /// </summary>
+        /// <param name="whatToLog"></param>
+        /// <param name="startTime"></param>
+        public static void LogToFile(string whatToLog, DateTime startTime)
+        {
+            _debuglog.LogAction($"\n============================================================\n" +
+                                $"{whatToLog}: {DateTime.Now - startTime}\n" +
+                                $"============================================================");
+        }
 
         // TODO: --3-- consider saving each sentence in a file and append it to each line. that way you can still read that in if something were to happen to the binary data
         public static void SaveToBinaryFile<T>(string filePath, T objectToWrite)

@@ -25,7 +25,7 @@ namespace EnglishLearner
         Configuration _config = null; // TODO: --1-- need to determine where this should live and be addressed
         Dictionary<string, Trie> trieDict = new Dictionary<string, Trie>(); // TODO: --3-- this may need to be stored in a brain class
         Sqlite_Actions _sql;
-        private async Task<bool> Run()
+        private void Run()
         {
             // TODO: --3-- trap in a loop to take user input and other things
             UniversalFunctions.LogToFile("Function Run called...");
@@ -35,7 +35,9 @@ namespace EnglishLearner
             // TODO: --1-- ADD TO THIS WHENEVER YOU WANT WITH AS MUCH AS YOU WANT
             List<string> sentences = new List<string>()
             {
+                "  It's the precious' food!",
                 "I like the food here?",
+                "I like the food here?", // Since it's a dupe, it doesn't add
                 "The quick brown fox jumped over the lazy dog.",
                 "the slow brown fox jumped over the lazy dog.",
                 "The crazy red fox jumped over the lazy dog.",
@@ -63,32 +65,41 @@ namespace EnglishLearner
                 "I have very good posture."
             };
 
-            //string[] words = book.ToPlainText().Split(" ");
-            if (!(trieDict.Count > 0))
+            DateTime startTime = DateTime.Now; // DO NOT DELETE; logs time to complete
+
+            foreach (string word in sentences)
             {
-                foreach (string sp in sentences)
+                if (word.Length > 1) // Catches for blanks or empty strings
                 {
-                    if (sp.Length > 1)
+                    try
                     {
+                        DateTime xphrase = DateTime.Now;
+                        var nsp = new Phrase(word, _config.SolutionDirectory + "\\Data");
+                        UniversalFunctions.LogToFile("Phrase Time", xphrase);
 
-                        var nsp = new Phrase(sp, _config.SolutionDirectory + "\\Data");
-
+                        DateTime trie = DateTime.Now;
                         Trie test;
                         trieDict.TryGetValue(nsp.Phrase_First_Word, out test);
 
                         if (test != null)
                         {
-                            trieDict[nsp.Phrase_First_Word].Append(nsp.Phrase_Split_Sentence);
+                            trieDict[nsp.Phrase_First_Word].Append(nsp);
                         }
                         else
                         {
-                            trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp.Phrase_Split_Sentence));
+                            trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp));
                         }
+                        UniversalFunctions.LogToFile("Add/Append Trie Time", trie);
                     }
-                }
-                //UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
-            }
-            return true;
+                    catch (Exception e)
+                    {
+                        UniversalFunctions.LogToFile($"Error creating phrase: {word}", e);
+                    }
+                } // if;
+            } // foreach
+              //UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
+
+            UniversalFunctions.LogToFile($"Time to Complete Trie", startTime);
         } // function Run;
 
         #region Startup_Functions

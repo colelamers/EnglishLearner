@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace EnglishLearner
 {
@@ -85,23 +87,57 @@ namespace EnglishLearner
         
         public static string ToProper(string word)
         {
+            UniversalFunctions.LogToFile("ToProper called...");
+
             // TODO: --1-- make a function that makes a word First letter captialized
             return word;
         }
 
         public static string[] RemovePunctuation(string[] sentence)
         {
+            UniversalFunctions.LogToFile("RemovePunctuation called...");
+
             // TODO: --1-- make a functiont that removes the { ., !, ?  } at the end of a sentence, but also then retains it or something...idk. ignore it for now but make a note of it either way.
             return sentence;
         }
 
         public static (string[], char) GetSplitSentenceAndPunctuation(string sentence)
         {
-            // TODO: --1-- hunter; verify this is correct
+            UniversalFunctions.LogToFile("GetSplitSentenceAndPunctuation called...");
+            string[] splitSentence = string.Join("", sentence.Split(',', '\'')).Split(" "); //https://stackoverflow.com/questions/7411438/remove-characters-from-c-sharp-string fastest way
+            string[] sentenceAsArray = RemoveNullOrWhiteSpaceIndexes(splitSentence);
 
-            string[] sentenceAsArray = sentence.Split(" ");
-            int num;
-            sentenceAsArray = sentenceAsArray.Where(x => !string.IsNullOrWhiteSpace(x)).Where(x => !int.TryParse(x, out num)).ToArray();
+            return (sentenceAsArray, GetPunctuation(sentenceAsArray));
+        } // function GetSplitSentence
+
+        private static string[] RemoveNullOrWhiteSpaceIndexes(string[] splitSentence)
+        {
+            int j = 0;
+            for (int i = 0; i < splitSentence.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(splitSentence[i]))
+                {
+                    j++;
+                } // if; string is not null
+            } // // for; each array index
+
+            string[] sentenceAsArray = new string[j];
+            int k = 0;
+            for (int i = 0; i < splitSentence.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(splitSentence[i]))
+                {
+                    sentenceAsArray[k] = splitSentence[i];
+                    k++; // new array index
+                } // if; index is not null
+            } // for; each word from the passed in string[]
+
+            return sentenceAsArray;
+        } // function RemoveNullOrWhiteSpaceIndexes
+
+        private static char GetPunctuation(string[] sentenceAsArray)
+        {
+            UniversalFunctions.LogToFile("GetPunctuation called...");
 
             string finalWord = sentenceAsArray[sentenceAsArray.Length - 1];
             int finalWordPunctuationIndex = finalWord.Length - 1;
@@ -114,44 +150,43 @@ namespace EnglishLearner
                 sentenceAsArray[sentenceAsArray.Length - 1] = finalWord;
             } // if; checks for end sentence punctuation and updates it if it's different and removes it from the split setence
 
-            return (sentenceAsArray, punctuation);
-        } // function GetSplitSentence
+            return punctuation;
+        }
 
         public static string GetFirstWordProper(string[] splitSentence)
         {
             // TODO: --1-- hunter; verify this is correct
+            UniversalFunctions.LogToFile("GetPunctuation called...");
 
             char[] capitalizedFirstLetter = splitSentence[0].ToCharArray();
             capitalizedFirstLetter[0] = char.ToUpper(capitalizedFirstLetter[0]);
             return new string(capitalizedFirstLetter);
         } // function GetFirstWordProper
 
-        private static DataRowCollection CreateAndExecuteQuery(string[] sentence, string configPath)
+        public static char[] GetSeteneceWordTypePattern(string[] sentence, string configPath)
         {
-            // TODO: --1-- need to make dynamically create table - cole will do this
+            UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
+            char[] wordPattern = new char[sentence.Length];
+
             Sqlite_Actions _sql = new Sqlite_Actions(configPath, "Dictionary");
             string buildQuery = $"SELECT DISTINCT word, wordtype FROM entries WHERE word in ('{sentence[0]}'";
 
-            for(int i = 1; i < sentence.Length; i++)
+            for (int i = 1; i < sentence.Length; i++)
             {
                 buildQuery += $",'{sentence[i]}'";
             }
             buildQuery += ");";
 
             _sql.ExecuteQuery(@$"{buildQuery}");
-            return _sql.ActiveQueryResults.Rows;
-        } // function CreateAndExecuteQuery
 
-        public static List<char> GetSeteneceWordTypePattern(string[] sentence, string configPath)
-        {
-            List<char> wordPattern = new List<char>();
-
-           DataRowCollection queryResults = CreateAndExecuteQuery(sentence, configPath);
-            foreach (DataRow dRow in queryResults)
+            if (_sql.ActiveQueryResults.Rows != null)
             {
-                // TODO: --1-- Hunter
-                //dRow["word"]
-                //dRow["wordType"]
+                foreach (DataRow dRow in _sql.ActiveQueryResults.Rows)
+                {
+                    // TODO: --1-- Hunter
+                    //dRow["word"]
+                    //dRow["wordType"]
+                }
             }
 
             return wordPattern;

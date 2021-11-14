@@ -16,16 +16,16 @@ namespace EnglishLearner
     {
         public string Word { get; set; }
         public Dictionary<string, TrieNode> Children { get; set; } // string = key, TreeNode = new KvP list of potential nodes
-        int row { get; set; }
+        public int NodeDepth { get; set; }
         public bool IsItLegal { get; set; } // legal by default
  
 
-        public TrieNode(string word, int iRow)
+        public TrieNode(string word, int currentDepth)
         {
             this.Word = word;
             this.Children = new Dictionary<string, TrieNode>();
             this.IsItLegal = true;
-            this.row = iRow;
+            this.NodeDepth = currentDepth;
         } // set Child Node
     }
 }
