@@ -22,7 +22,7 @@ namespace EnglishLearner
     /// <summary>
     /// Class that simplifies access to the Microsoft.Data.Sqlite nuget package. 
     /// </summary>
-    public class Sqlite_Actions
+    public class Sqlite_Actions : IDisposable
     {
         private DebugLogging _debugLogging = new DebugLogging();
         private SqliteConnection _sqlConnection;
@@ -33,7 +33,13 @@ namespace EnglishLearner
         public List<string> DatabaseTableList { get; private set; }
 
         public delegate void DataFunction(SqliteDataReader sdr);
-        
+
+        // Public implementation of Dispose pattern callable by consumers.
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+        }
+
         /// <summary>
         /// Default constructor. Just requires the name to the file. Not the full path or the extension, just the exact name. Get's converted into lower case so casing is not important.
         /// </summary>
@@ -159,6 +165,60 @@ namespace EnglishLearner
             {
                 _debugLogging.LogAction($"Error: {e}");
             } // catch;
+        } // function PerformCommand;
+
+        /// <summary>
+        /// Function for retrieving data but not overwriting the ActiveQueryResults.
+        /// </summary>
+        /// <param name="transaction">SQL transaction. Ex: SELECT * FROM JTABLE WHERE NCOL = 'WORDS'</param>
+        /// <param name="tempData">Pass in a new DataTable to return the data with the desired data</param>
+        /// <returns></returns>
+        public DataTable ExecuteQuery(string transaction, DataTable tempData)
+        {
+            Dictionary<string, string> queryDict = new Dictionary<string, string>();
+            queryDict.Add("query", transaction);
+            //TODO: --3-- test this with a 'DROP TABLE;' and see if it posts it as a string or it executes the drop table command.
+            try
+            {
+                using (this._sqlConnection)
+                {
+                    this._sqlConnection.Open();
+                    SqliteCommand command = _sqlConnection.CreateCommand();
+                    command.CommandText = queryDict["query"];
+                    command.ExecuteNonQuery();
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        try
+                        {
+                            for (int i = 0; i < reader.VisibleFieldCount; i++)
+                            {
+                                tempData.Columns.Add(reader.GetName(i));
+                            } // for; gets column headers
+
+                            while (reader.Read())
+                            {
+                                DataRow dRow = this.ActiveQueryResults.NewRow();
+
+                                for (int i = 0; i < reader.VisibleFieldCount; i++)
+                                {
+                                    dRow[reader.GetName(i)] = reader.GetString(i);
+                                } // for; iterate columns
+                                tempData.Rows.Add(dRow);
+                            } // while; iterate rows
+                        } // try;
+                        catch (Exception e)
+                        {
+                            _debugLogging.LogAction($"Error: {e}");
+                        } // catch;
+                    } // using; ExecuteReader
+                } // using; sqlconnection
+            } // try;
+            catch (Exception e)
+            {
+                _debugLogging.LogAction($"Error: {e}");
+            } // catch;
+            return tempData;
         } // function PerformCommand;
 
         /// <summary>

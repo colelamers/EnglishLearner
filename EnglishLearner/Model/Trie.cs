@@ -19,10 +19,12 @@ namespace EnglishLearner
     [Serializable]
     class Trie
     {
-        public TrieNode Root = null;
+        public Phrase NodePhrase = null;
+        private TrieNode Root = null;
         private TrieNode Current = null, Next = null;
-
         public List<TrieNode> listOfNodes = new List<TrieNode>();
+
+        public List<Phrase> ListOfPhrases = new List<Phrase>();
         //public int Depth = 0; // TODO: --3-- implement a depth/height/length/size?
         //public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --3-- most likely will need this at each tree root for info about corresponding sentences
         // TODO: --1-- should probably be in model and not controller. make a brain class again but contain the tree and certain functions?
@@ -33,9 +35,11 @@ namespace EnglishLearner
         // NOTE: Key based traversal is DFS, Deciding on which available child nodes 
         // TODO: --1-- to get sibling nodes at that level, you'll need to grab all the parent keys and the parent dictionary at each child node though...hmm, and point to the same dictionary of the parent node to grab/search a sibling
         // TODO: --1-- look into an adjacency matrix
+        // TODO: --4--  this will be when a tree traversal occurs, it will look to see if other nodes have things it can use for another sentence and add it in. If it doesn't make sense or is incorrect, we can provide input to let it know. DFS or BFS search
 
         public Trie(string[] sentence)
         {
+            //this.NodePhrase = new Phrase(sentence);
             // TODO: --1-- instead of the sentence array, pass in the phrase, then we can retain the phrases at each tree root
             UniversalFunctions.LogToFile("Tree Constructor called...");
             SetTreeRoot(sentence);
@@ -43,7 +47,7 @@ namespace EnglishLearner
             this.Current = this.Root;
             for (int i = 1; i < sentence.Length; i++)
             {
-                TrieNode newNode = new TrieNode(sentence[i]);
+                TrieNode newNode = new TrieNode(sentence[i], i);
                 this.Current.Children.Add(newNode.Word, newNode);
                 this.Current.Children.TryGetValue(sentence[i], out this.Next);
 
@@ -62,7 +66,7 @@ namespace EnglishLearner
         private void SetTreeRoot(string[] sentence)
         {
             UniversalFunctions.LogToFile("SetTreeRoot called...");
-            this.Root = new TrieNode(sentence[0]);
+            this.Root = new TrieNode(sentence[0], 0);
         } // function SetTreeRoot
 
         // TODO: --3-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
@@ -115,7 +119,7 @@ namespace EnglishLearner
                 {
                     for (int i = iterator; i < sentence.Length; i++)
                     {
-                        TrieNode newNode = new TrieNode(sentence[i]);
+                        TrieNode newNode = new TrieNode(sentence[i], i);
                         this.Current.Children.Add(newNode.Word, newNode);
                         this.Next = this.Current.Children[newNode.Word];
 
