@@ -4,8 +4,6 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite; // NuGet package;
 using System.Data;
-using EpubSharp;
-using System.Threading.Tasks;
 
 namespace EnglishLearner
 {
@@ -24,7 +22,6 @@ namespace EnglishLearner
     {
         Configuration _config = null; // TODO: --1-- need to determine where this should live and be addressed
         Dictionary<string, Trie> trieDict = new Dictionary<string, Trie>(); // TODO: --3-- this may need to be stored in a brain class
-        Sqlite_Actions _sql;
         private void Run()
         {
             // TODO: --3-- trap in a loop to take user input and other things
@@ -33,7 +30,7 @@ namespace EnglishLearner
             Console.WriteLine("Please provide a sentence for me to learn from:\n");
 
             // TODO: --1-- ADD TO THIS WHENEVER YOU WANT WITH AS MUCH AS YOU WANT
-            List<string> sentences = new List<string>()
+            List<string> listOfSentences = new List<string>()
             {
                 "  It's the precious' food!",
                 "I like the food here?",
@@ -70,13 +67,25 @@ namespace EnglishLearner
             // Loads in the Trie Data. Do not do until we finalize the Phrase class
             //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
 
-            foreach (string word in sentences)
+            Dictionary<string, string[]> sqlTransposed = new Dictionary<string, string[]>();
+            using (Sqlite_Actions _sql = new Sqlite_Actions(_config.SolutionDirectory + "\\Data", "Dictionary"))
             {
-                if (word.Length > 1) // Catches for blanks or empty strings
+                _sql.ExecuteQuery(@"SELECT word, wordtype FROM entries WHERE word NOT LIKE '''%' AND word NOT LIKE '-%' AND word NOT LIKE ',%' AND word NOT LIKE '\%' ORDER BY word");
+
+                sqlTransposed = _sql.ActiveQueryResults.AsEnumerable()
+                    .GroupBy(x => new string(x.Field<string>("word")), y => y.Field<string>("wordtype"))
+                    .ToDictionary(x => x.Key, y => y.ToArray()); // Converts datatable into a Dictionary in the way you want it based on the column fields in the datatable
+            } // Using Sqlite_Actions to get sql data but feed uniques into a dictionary
+
+
+            foreach (string sentence in listOfSentences)
+            {
+                if (sentence.Length > 1) // Catches for blanks or empty strings
                 {
                     try
                     {
-                        var nsp = new Phrase(word, _config.SolutionDirectory + "\\Data");
+                        var nsp = new Phrase(sentence, sqlTransposed);
+                        //var nsp = new Phrase(sentence, _config.SolutionDirectory + "\\Data");
 
                         Trie trieRoot;
                         trieDict.TryGetValue(nsp.Phrase_First_Word, out trieRoot);
@@ -92,13 +101,14 @@ namespace EnglishLearner
                     }
                     catch (Exception e)
                     {
-                        UniversalFunctions.LogToFile($"Error creating phrase: {word}", e);
+                        UniversalFunctions.LogToFile($"Error creating phrase: {sentence}", e);
                     }
                 } // if;
             } // foreach
-              UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
+              //UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
 
             UniversalFunctions.LogToFile($"Time to Complete Trie", startTime);
+
         } // function Run;
 
         #region Startup_Functions
@@ -126,7 +136,6 @@ namespace EnglishLearner
 /*
             this._sql = new Sqlite_Actions(_config.SolutionDirectory + "\\Data", "Dictionary");
             this._sql.ExecuteQuery(@"SELECT word, wordtype FROM entries WHERE wordtype IS NOT NULL; GROUP BY word ORDER BY word;");
-            var t = this._sql.ActiveQueryResults.Rows;
 */
         } // function StartupActions;
 

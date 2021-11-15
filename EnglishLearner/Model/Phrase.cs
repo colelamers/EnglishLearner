@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Data;
-using System.Threading.Tasks;
 
 namespace EnglishLearner
 {
@@ -18,6 +14,7 @@ namespace EnglishLearner
      */
 
     // TODO: --1-- this is our most cost expensive area so efficiency is crucial here
+    [Serializable]
     public class Phrase
     {
         public string Phrase_Sentence { get; set; }
@@ -26,6 +23,14 @@ namespace EnglishLearner
         public char Phrase_Punctuation { get; set; }
         public char[] SentencePattern { get; set; }
 
+        public Phrase(string sentence, Dictionary<string, string[]> sqlAsDict)
+        {
+            this.Phrase_Sentence = sentence;
+            (this.Phrase_Split_Sentence, this.Phrase_Punctuation) = SentenceFunctions.GetSplitSentenceAndPunctuation(this.Phrase_Sentence);
+            this.Phrase_First_Word = this.Phrase_Split_Sentence[0].ToProper();
+            this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Phrase_Split_Sentence, sqlAsDict);          
+        }
+/*
         public Phrase(string sentence, string configPath)
         {
             this.Phrase_Sentence = sentence;
@@ -33,6 +38,6 @@ namespace EnglishLearner
             this.Phrase_First_Word = SentenceFunctions.GetFirstWordProper(this.Phrase_Split_Sentence);
             this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Phrase_Split_Sentence, configPath);
         } // constructor; Phrase
-
+*/
     }
 }

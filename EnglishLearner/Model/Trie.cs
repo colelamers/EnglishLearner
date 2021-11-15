@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace EnglishLearner
 {
@@ -104,7 +103,7 @@ namespace EnglishLearner
             if (sentence.Length > iterator)
             {
                 this.Current = whichNode;
-                this.Current.Children.TryGetValue(sentence[iterator], out this.Next);
+                this.Current.Children.TryGetValue(sentence[iterator], out this.Next); // TODO: --1-- trygetvalue returns bool and an out. so you can use this as an if check!!!
 
                 if (this.Next != null)
                 {

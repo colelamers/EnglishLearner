@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace EnglishLearner
 {
@@ -163,33 +161,64 @@ namespace EnglishLearner
             return new string(capitalizedFirstLetter);
         } // function GetFirstWordProper
 
-        public static char[] GetSeteneceWordTypePattern(string[] sentence, string configPath)
+        public static char[] GetSeteneceWordTypePattern(string[] splitSentence, Dictionary<string, string[]> sqlAsDict)
         {
             UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
-            char[] wordPattern = new char[sentence.Length];
-
-            Sqlite_Actions _sql = new Sqlite_Actions(configPath, "Dictionary");
-            string buildQuery = $"SELECT DISTINCT word, wordtype FROM entries WHERE word in('{sentence[0]}'";
-
-            for (int i = 1; i < sentence.Length; i++)
+            char[] wordPattern = new char[splitSentence.Length];
+            try
             {
-                buildQuery += $",'{sentence[i]}'";
-            }
-            buildQuery += ");";
-
-            _sql.ExecuteQuery(@$"{buildQuery}");
-
-            if (_sql.ActiveQueryResults?.Rows.Count > 0)
-            {
-                foreach (DataRow dRow in _sql.ActiveQueryResults.Rows)
+                foreach (string word in splitSentence)
                 {
-                    // TODO: --1-- Hunter
-                    //dRow["word"]
-                    //dRow["wordType"]
-                }
+                    string[] types;
+                    if (sqlAsDict.TryGetValue(word.ToProper(), out types))
+                    {
+                        types = RemoveNullOrWhiteSpaceIndexes(types); // returns the string array of the word types for that word and removes all empty values
+                        for (int i = 0; i < types?.Length; i++)
+                        {
+                            if(types[i].IndexOfAny(endPunctuation) >= 0)
+                            {
+                                // TODO: --1-- hunter work on figuring out what wordtype to choose. right here you just need to check each word type item and figure out which one it should be. the if statement is not required but it seems like something we'd need but idk
+                            }
+                        } // for
+                    } // if; key is in dictionary
+                } // foreach word
+            }
+            catch(Exception e)
+            {
+                UniversalFunctions.LogToFile("Exception", e);
             }
 
             return wordPattern;
-        } 
+        } // function; GetSeteneceWordTypePattern
+        /*
+                public static char[] GetSeteneceWordTypePattern(string[] sentence, string configPath)
+                {
+                    UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
+                    char[] wordPattern = new char[sentence.Length];
+
+                    Sqlite_Actions _sql = new Sqlite_Actions(configPath, "Dictionary");
+                    string buildQuery = $"SELECT DISTINCT word, wordtype FROM entries WHERE word in('{sentence[0]}'";
+
+                    for (int i = 1; i < sentence.Length; i++)
+                    {
+                        buildQuery += $",'{sentence[i]}'";
+                    }
+                    buildQuery += ");";
+
+                    _sql.ExecuteQuery(@$"{buildQuery}");
+
+                    if (_sql.ActiveQueryResults?.Rows.Count > 0)
+                    {
+                        foreach (DataRow dRow in _sql.ActiveQueryResults.Rows)
+                        {
+                            // TODO: --1-- Hunter
+                            //dRow["word"]
+                            //dRow["wordType"]
+                        }
+                    }
+
+                    return wordPattern;
+                } 
+        */
     }
 }
