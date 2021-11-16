@@ -30,14 +30,5 @@ namespace EnglishLearner
             this.Phrase_First_Word = this.Phrase_Split_Sentence[0].ToProper();
             this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Phrase_Split_Sentence, sqlAsDict);          
         }
-/*
-        public Phrase(string sentence, string configPath)
-        {
-            this.Phrase_Sentence = sentence;
-            (this.Phrase_Split_Sentence, this.Phrase_Punctuation) = SentenceFunctions.GetSplitSentenceAndPunctuation(this.Phrase_Sentence);
-            this.Phrase_First_Word = SentenceFunctions.GetFirstWordProper(this.Phrase_Split_Sentence);
-            this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Phrase_Split_Sentence, configPath);
-        } // constructor; Phrase
-*/
     }
 }

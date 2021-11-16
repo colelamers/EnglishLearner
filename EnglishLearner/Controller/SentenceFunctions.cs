@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace EnglishLearner
 {
@@ -82,27 +83,16 @@ namespace EnglishLearner
             } // catch
         } // function Split_Paragraph
 
-        
-        public static string ToProper(string word)
-        {
-            UniversalFunctions.LogToFile("ToProper called...");
-
-            // TODO: --1-- make a function that makes a word First letter captialized
-            return word;
-        }
-
-        public static string[] RemovePunctuation(string[] sentence)
-        {
-            UniversalFunctions.LogToFile("RemovePunctuation called...");
-
-            // TODO: --1-- make a functiont that removes the { ., !, ?  } at the end of a sentence, but also then retains it or something...idk. ignore it for now but make a note of it either way.
-            return sentence;
-        }
-
+        // TODO: --1-- add a function that replaces & with "and" or + with "plus" or - with "minus" and things like that
         public static (string[], char) GetSplitSentenceAndPunctuation(string sentence)
         {
             UniversalFunctions.LogToFile("GetSplitSentenceAndPunctuation called...");
-            string[] splitSentence = string.Join("", sentence.Split(',', '\'')).Split(" "); //https://stackoverflow.com/questions/7411438/remove-characters-from-c-sharp-string fastest way
+            /*
+             * string[] splitSentence = Regex.Replace(sentence, "[^A-z ]", "").Split(" "); // retain only A-z and spaces
+             * passing in char[] is ~2.5x faster at the split join than regex. however consider the regex if things get too complicated or there are additional chars we need to eliminate
+             */
+            char[] removeChars = new char[] { '\'', '"', '/', ';', ':', '*', '^', '&', '@','\'', '[', ']', '|', '>', '<' }; 
+            string[] splitSentence = string.Join("", sentence.Split(removeChars)).Split(" "); //https://stackoverflow.com/questions/7411438/remove-characters-from-c-sharp-string fastest way
             string[] sentenceAsArray = RemoveNullOrWhiteSpaceIndexes(splitSentence);
 
             return (sentenceAsArray, GetPunctuation(sentenceAsArray));
@@ -151,16 +141,6 @@ namespace EnglishLearner
             return punctuation;
         }
 
-        public static string GetFirstWordProper(string[] splitSentence)
-        {
-            // TODO: --1-- hunter; verify this is correct
-            UniversalFunctions.LogToFile("GetPunctuation called...");
-
-            char[] capitalizedFirstLetter = splitSentence[0].ToCharArray();
-            capitalizedFirstLetter[0] = char.ToUpper(capitalizedFirstLetter[0]);
-            return new string(capitalizedFirstLetter);
-        } // function GetFirstWordProper
-
         public static char[] GetSeteneceWordTypePattern(string[] splitSentence, Dictionary<string, string[]> sqlAsDict)
         {
             UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
@@ -190,35 +170,5 @@ namespace EnglishLearner
 
             return wordPattern;
         } // function; GetSeteneceWordTypePattern
-        /*
-                public static char[] GetSeteneceWordTypePattern(string[] sentence, string configPath)
-                {
-                    UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
-                    char[] wordPattern = new char[sentence.Length];
-
-                    Sqlite_Actions _sql = new Sqlite_Actions(configPath, "Dictionary");
-                    string buildQuery = $"SELECT DISTINCT word, wordtype FROM entries WHERE word in('{sentence[0]}'";
-
-                    for (int i = 1; i < sentence.Length; i++)
-                    {
-                        buildQuery += $",'{sentence[i]}'";
-                    }
-                    buildQuery += ");";
-
-                    _sql.ExecuteQuery(@$"{buildQuery}");
-
-                    if (_sql.ActiveQueryResults?.Rows.Count > 0)
-                    {
-                        foreach (DataRow dRow in _sql.ActiveQueryResults.Rows)
-                        {
-                            // TODO: --1-- Hunter
-                            //dRow["word"]
-                            //dRow["wordType"]
-                        }
-                    }
-
-                    return wordPattern;
-                } 
-        */
     }
 }

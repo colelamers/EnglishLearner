@@ -32,7 +32,8 @@ namespace EnglishLearner
             // TODO: --1-- ADD TO THIS WHENEVER YOU WANT WITH AS MUCH AS YOU WANT
             List<string> listOfSentences = new List<string>()
             {
-                "  It's the precious' food!",
+                "  It's the, preciou's food!",
+                "...", // TODO: --1-- need to catch for elipses, non sentences. so maybe need to do that Is_Sentence assertion somewhere
                 "I like the food here?",
                 "I like the food here?", // Since it's a dupe, it doesn't add
                 "The quick brown fox jumped over the lazy dog.",
