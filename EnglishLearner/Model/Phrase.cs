@@ -21,7 +21,7 @@ namespace EnglishLearner
         public string[] Phrase_Split_Sentence { get; set; }
         public string Phrase_First_Word { get; set; }
         public char Phrase_Punctuation { get; set; }
-        public char[] SentencePattern { get; set; }
+        public string[] SentencePattern { get; set; }
 
         public Phrase(string sentence, Dictionary<string, string[]> sqlAsDict)
         {
