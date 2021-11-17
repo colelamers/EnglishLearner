@@ -18,7 +18,7 @@ namespace EnglishLearner
     [Serializable]
     class Trie
     {
-        public List<char[]> ListOfPatterns = new List<char[]>();
+        public List<string[]> ListOfPatterns = new List<string[]>();
         public List<TrieNode> ListOfNodes = new List<TrieNode>();
         public List<Phrase> ListOfPhrases = new List<Phrase>();
         public int ChildNodeCount = 0;

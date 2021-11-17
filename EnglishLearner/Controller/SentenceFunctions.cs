@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace EnglishLearner
 {
     /*
-     * Created by Cole Lamers 
+     * Created by Cole Lamers & Hunter Van de Water
      * Date: 2021-11-04
      * 
      * == Purpose ==
@@ -24,7 +24,7 @@ namespace EnglishLearner
         { 
             "n.",      //noun
             "pron.",   //pronoun
-            "object",  //another type for pronoun like "I"
+            "object.",  //another type for pronoun like "I"
             "v.",      //verb
             "adv.",    //adverb
             "imp.",    //Past tense word; -ed
@@ -33,7 +33,8 @@ namespace EnglishLearner
             "adj.",    //adjective
             "superl.", //adjective
             "a.",      //adjective
-            "prep."    //preposition; on, onto, in, to, through, from, at
+            "prep.",    //preposition; on, onto, in, to, through, from, at
+            "definite article." //articles such as the
 
         }; // TODO: --1-- consider changing into a dictionary instead so we can return what we want for the values? KISS for word types.
 
@@ -141,27 +142,56 @@ namespace EnglishLearner
             return punctuation;
         }
 
-        public static char[] GetSeteneceWordTypePattern(string[] splitSentence, Dictionary<string, string[]> sqlAsDict)
+        public static string[] GetSeteneceWordTypePattern(string[] splitSentence, Dictionary<string, string[]> sqlAsDict)
         {
             UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
-            char[] wordPattern = new char[splitSentence.Length];
+            string[] wordPattern = new string[splitSentence.Length];
+            string[] wordPatternType = new string[1];
+            int wordNum = -1;
             try
             {
                 foreach (string word in splitSentence)
                 {
+                    wordNum++;
                     string[] types;
                     if (sqlAsDict.TryGetValue(word.ToProper(), out types))
                     {
                         types = RemoveNullOrWhiteSpaceIndexes(types); // returns the string array of the word types for that word and removes all empty values
+
+                        string typesHold = null;
+
                         for (int i = 0; i < types?.Length; i++)
                         {
-                            if(types[i].IndexOfAny(endPunctuation) >= 0)
+                            if (types[i].IndexOfAny(endPunctuation) >= 0)
                             {
                                 // TODO: --1-- hunter work on figuring out what wordtype to choose. right here you just need to check each word type item and figure out which one it should be. the if statement is not required but it seems like something we'd need but idk
+                                //Console.WriteLine(word + "\n");
+                                //Console.WriteLine(types[i]);
+                                //Console.WriteLine(wordTypes[i]);
+                                for (int j = 0; j < wordTypes.Count; j++)
+                                {
+                                    if (types[i] == wordTypes[j] && typesHold == null)
+                                    {
+                                        typesHold = types[i];
+                                        wordPattern[wordNum] = types[i];
+                                        break;
+                                    }
+                                    else if(typesHold == types[i])
+                                    {
+                                        break;
+                                    }
+                                }
                             }
                         } // for
                     } // if; key is in dictionary
                 } // foreach word
+
+                
+                for (int i = 0; i < wordPattern.Length; i++)
+                {
+                    Console.WriteLine(splitSentence[i]);
+                    Console.WriteLine(wordPattern[i] + "\n");
+                }
             }
             catch(Exception e)
             {
