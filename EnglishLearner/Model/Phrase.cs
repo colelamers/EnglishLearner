@@ -13,7 +13,6 @@ namespace EnglishLearner
      * 
      */
 
-    // TODO: --1-- this is our most cost expensive area so efficiency is crucial here
     [Serializable]
     public class Phrase
     {

@@ -36,7 +36,7 @@ namespace EnglishLearner
             "a.",       //adjective
             "prep.",    //preposition; on, onto, in, to, through, from, at
             "definite article." //articles such as the
-        }; // TODO: --1-- consider changing into a dictionary instead so we can return what we want for the values? KISS for word types.
+        };
 
         private static readonly string[] pluralSuffixes = new string[]
         {
@@ -182,7 +182,6 @@ namespace EnglishLearner
 
         public static string[] GetSeteneceWordTypePattern(string[] splitSentence, Dictionary<string, string[]> sqlAsDict)
         {
-            // TODO: --1-- need to parse for suffixes to accurately get certain words since they're not in the dictionary passed in. Return "?" or "NA" if not available
             UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
             string[] wordPattern = new string[splitSentence.Length];
             try
@@ -215,57 +214,68 @@ namespace EnglishLearner
                         dictTypes = new string[] { "?" };
                     } // if; key is not in dictionary
 
-                    metadata_word.WordTypes = dictTypes;
+                    metadata_word = new Word(dictTypes, splitSentence[i]);
+                    /*
+                                        if ((i + 1) < splitSentence.Length)
+                                        {
+                                            metadata_word.NextWord = splitSentence[i + 1];
+                                        } //  if; there is an index ensuing the current
 
-                    if ((i + 1) < splitSentence.Length)
-                    {
-                        metadata_word.NextWord = splitSentence[i + 1];
-                    } //  if; there is an index ensuing the current
-
-                    if ((i - 1) > 0)
-                    {
-                        metadata_word.PreceedingWord = splitSentence[i - 1];
-                    } // if; there is an index preceeding the current
-
+                                        if ((i - 1) > 0)
+                                        {
+                                            metadata_word.PreceedingWord = splitSentence[i - 1];
+                                        } // if; there is an index preceeding the current
+                    */
                     wordAndTheirTypes.Add(splitSentence[i], metadata_word); // ad the list with the word
 
                 } // for; word in the sentence
-                DetermineWordType(wordAndTheirTypes);
-            }
+
+                foreach (KeyValuePair<string, Word> kvp in wordAndTheirTypes)
+                {
+                    for (int i = 0; i < kvp.Value.WordTypes.Length; i++)
+                    {
+                        foreach (string wType in wordTypes)
+                        {
+                            // TODO: --3-- might need to check in this part of the loop in case it starts pulling non standard values
+                            if (kvp.Value.WordTypes[i].Length > wType.Length)
+                            {
+                                string shortenedType = kvp.Value.WordTypes[i].Substring(0, wType.Length);
+                                if (shortenedType.ToCharArray().SequenceEqual(wType.ToCharArray()))
+                                {
+                                    wordAndTheirTypes[kvp.Key].WordTypes[i] = shortenedType;
+                                } // if; WordType was split at the length of the word type being checked to verify if they match, then it will update the index with the standardized syntax
+                            } // if; WordTypes is longer than the specific word type being checked
+                        } // foreach; wordType found within the Word object
+                    } // foreach; word and it's corresponding object
+                } // foreach; kvp
+
+                string subject = "";
+                string verb = "";
+                string obj = "";
+
+                LinkedList<Word> llWord = new LinkedList<Word>();
+                LinkedListNode<Word> lln = null; // root
+
+                foreach (KeyValuePair<string, Word> kvp in wordAndTheirTypes)
+                {
+                    lln = new LinkedListNode<Word>(kvp.Value);
+                    llWord.AddLast(lln);
+                }
+
+                while (lln.Previous != null) { lln = lln.Previous; } // while; revert back to root
+
+                // TODO: --1-- find a noun, if you have multiple, determine based on previous/next or something, make subject, then do the same for the verb, object
+                // TODO: --1-- build the word patter at this point.
+            } // try
             catch (Exception e)
             {
                 UniversalFunctions.LogToFile("Exception", e);
-            }
+            } // catch
 
             return wordPattern;
         } // function; GetSeteneceWordTypePattern
 
-        private static void DetermineWordType(Dictionary<string, Word> wordAndTheirTypes)
-        {
 
-            string subject = "";
-            string verb = "";
-            string obj = "";
 
-            foreach (KeyValuePair<string, Word> kvp in wordAndTheirTypes)
-            {
-                for (int i = 0; i < kvp.Value.WordTypes.Length; i++)
-                {
-                    foreach (string wType in wordTypes)
-                    {
-                        if (kvp.Value.WordTypes[i].Length > wType.Length)
-                        {
-                            string shortenedType = kvp.Value.WordTypes[i].Substring(0, wType.Length);
-                            if (shortenedType.ToCharArray().SequenceEqual(wType.ToCharArray()))
-                            {
-                                wordAndTheirTypes[kvp.Key].WordTypes[i] = shortenedType;
-                            } // if; WordType was split at the length of the word type being checked to verify if they match, then it will update the index with the correct syntax
-                        } // if; WordTypes is longer than the specific word type being checked
-                    } // foreach; WordType found within the Word object
-                } // foreach; updates improper syntax held in the wordAndTheirTypes
-
-                // TODO: --1-- here you need to then determine what is the proper SVO
-            } // foreach; word and it's corresponding object
-        }
-    }
-}
+    } // class SentenceFunctions
+} // namespsace

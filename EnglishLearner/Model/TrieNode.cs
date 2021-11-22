@@ -18,8 +18,8 @@ namespace EnglishLearner
         public Dictionary<string, TrieNode> Children { get; set; } // string = key, TreeNode = new KvP list of potential nodes
         public int NodeDepth { get; set; }
         public bool IsItLegal { get; set; } // legal by default
+        // TODO: --1-- i think i'm supposed to have current and next here...hmm
  
-
         public TrieNode(string word, int currentDepth)
         {
             this.Word = word;

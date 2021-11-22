@@ -22,12 +22,11 @@ namespace EnglishLearner
         public List<TrieNode> ListOfNodes = new List<TrieNode>();
         public List<Phrase> ListOfPhrases = new List<Phrase>();
         public int ChildNodeCount = 0;
-        private TrieNode Root = null;
-        private TrieNode Current = null, Next = null;
+        private TrieNode Root = null, Current = null, Next = null; // TODO: --1-- i think i'm supposed to have these stored at the node not here
 
         //public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --3-- most likely will need this at each tree root for info about corresponding sentences
         // TODO: --1-- to get sibling nodes at that level, you'll need to grab all the parent keys and the parent dictionary at each child node though...hmm, and point to the same dictionary of the parent node to grab/search a sibling
-        // TODO: --1-- look into an adjacency matrix
+        // TODO: --3-- look into an adjacency matrix
         // TODO: --4--  this will be when a tree traversal occurs, it will look to see if other nodes have things it can use for another sentence and add it in. If it doesn't make sense or is incorrect, we can provide input to let it know. DFS or BFS search
 
         public Trie(Phrase currentPhrase)
@@ -67,7 +66,7 @@ namespace EnglishLearner
         private void DFS_Find_Word(string findThisWord, TrieNode whichNode)
         {
             UniversalFunctions.LogToFile("DFS_Find_Word called...");
-            // TODO: --1-- not sure how to return a list through recursion. i really don't want a global value here.
+
             this.ListOfNodes = new List<TrieNode>(); // empties it out and creates a new search value stored at the index
             Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
 
@@ -103,7 +102,7 @@ namespace EnglishLearner
             if (sentence.Length > iterator)
             {
                 this.Current = whichNode;
-                this.Current.Children.TryGetValue(sentence[iterator], out this.Next); // TODO: --1-- trygetvalue returns bool and an out. so you can use this as an if check!!!
+                this.Current.Children.TryGetValue(sentence[iterator], out this.Next);
 
                 if (this.Next != null)
                 {

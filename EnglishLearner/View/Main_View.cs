@@ -17,10 +17,9 @@ namespace EnglishLearner
      * can learn to speak based off of that information utilizing a tree.
      * SQLite database is rudimentary at best and may not have the correct info
      */
-    // TODO: --3-- OPTIMIZATIONS WILL BE NECESSARY LATER ON 
     class Main_View
     {
-        Configuration _config = null; // TODO: --1-- need to determine where this should live and be addressed
+        Configuration _config = null;
         Dictionary<string, Trie> trieDict = new Dictionary<string, Trie>(); // TODO: --3-- this may need to be stored in a brain class
         private void Run()
         {
@@ -85,7 +84,6 @@ namespace EnglishLearner
                     try
                     {
                         var nsp = new Phrase(sentence, sqlTransposed);
-                        //var nsp = new Phrase(sentence, _config.SolutionDirectory + "\\Data");
 
                         Trie trieRoot;
                         trieDict.TryGetValue(nsp.Phrase_First_Word, out trieRoot);
@@ -117,15 +115,10 @@ namespace EnglishLearner
             UniversalFunctions.LogToFile("Function StartupActions called...");
             UniversalFunctions.Load_Configuration(ref this._config);
 
-            if (this._config != null)
-            {
-                // TODO: --1-- not sure what to do here
-            } // if; config is not null
-            else
+            if (this._config == null)
             {
                 this._config = new Configuration();
                 this._config.ConfigPath = "Cole Test";
-                this._config.ExitCode = 0;
                 this._config.SolutionDirectory = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Directory.GetCurrentDirectory())));
                 this._config.ProjectFolderPaths = Directory.GetDirectories(this._config.SolutionDirectory)
                     .Select(d => new { Attr = new DirectoryInfo(d).Attributes, Dir = d })
