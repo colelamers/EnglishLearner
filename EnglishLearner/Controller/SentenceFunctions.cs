@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace EnglishLearner
@@ -18,27 +19,40 @@ namespace EnglishLearner
      */
     public static class SentenceFunctions
     {
-        private static readonly char[] endPunctuation = new char [3] { '.', '?', '!' };
+        private static readonly char[] endPunctuation = new char[3] { '.', '?', '!' };
 
-        private static readonly List<string> wordTypes = new List<string> 
-        { 
-            "n.",      //noun
-            "pron.",   //pronoun
+        private static readonly string[] wordTypes = new string[]
+        {
+            "n.",       //noun
+            "pron.",    //pronoun
             "object.",  //another type for pronoun like "I"
-            "v.",      //verb
-            "adv.",    //adverb
-            "imp.",    //Past tense word; -ed
-            "p.p.",    //Past tense word; -ed
-            "conj.",   //and, both, because, or, then, until, if
-            "adj.",    //adjective
-            "superl.", //adjective
-            "a.",      //adjective
+            "v.",       //verb
+            "adv.",     //adverb don't need because v. will grab this
+            "imp.",     //Past tense word; -ed
+            "p.p.",     //Past tense word; -ed
+            "conj.",    //and, both, because, or, then, until, if
+            "adj.",     //adjective
+            "superl.",  //adjective
+            "a.",       //adjective
             "prep.",    //preposition; on, onto, in, to, through, from, at
             "definite article." //articles such as the
-
         }; // TODO: --1-- consider changing into a dictionary instead so we can return what we want for the values? KISS for word types.
 
-        // TODO: --3-- might want to rename this class because it handles paragraph parsing too
+        private static readonly string[] pluralSuffixes = new string[]
+        {
+            "ous",
+            "een",
+            "ass",
+            "ess",
+            "iss",
+            "oss",
+            "uss",
+            "sis",
+            "ics",
+            "sus",
+            "ies",
+            "ics"
+        };
 
         public static bool Is_Sentence(string consoleInput)
         {
@@ -56,7 +70,7 @@ namespace EnglishLearner
                     tof = false;
                 } // else
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 UniversalFunctions.LogToFile("Exception:", e);
             }
@@ -84,7 +98,7 @@ namespace EnglishLearner
             } // catch
         } // function Split_Paragraph
 
-        // TODO: --1-- add a function that replaces & with "and" or + with "plus" or - with "minus" and things like that
+        // TODO: --3-- add a function that replaces & with "and" or + with "plus" or - with "minus" and things like that
         public static (string[], char) GetSplitSentenceAndPunctuation(string sentence)
         {
             UniversalFunctions.LogToFile("GetSplitSentenceAndPunctuation called...");
@@ -92,7 +106,8 @@ namespace EnglishLearner
              * string[] splitSentence = Regex.Replace(sentence, "[^A-z ]", "").Split(" "); // retain only A-z and spaces
              * passing in char[] is ~2.5x faster at the split join than regex. however consider the regex if things get too complicated or there are additional chars we need to eliminate
              */
-            char[] removeChars = new char[] { '\'', '"', '/', ';', ':', '*', '^', '&', '@','\'', '[', ']', '|', '>', '<' }; 
+            char[] removeChars = new char[] { '\'', '"', '/', ';', ':', '*', '^', '&', '@', ',', '[', ']', '|', '>', '<' };
+            sentence = string.Join("", sentence.Split("..."));
             string[] splitSentence = string.Join("", sentence.Split(removeChars)).Split(" "); //https://stackoverflow.com/questions/7411438/remove-characters-from-c-sharp-string fastest way
             string[] sentenceAsArray = RemoveNullOrWhiteSpaceIndexes(splitSentence);
 
@@ -142,63 +157,115 @@ namespace EnglishLearner
             return punctuation;
         }
 
+        private static string RemoveTenseOrPlural(string word)
+        {
+            // Since English breaks so many rules, this is not 100% accurate for words like "When" or "Seen" or "Mess"
+            string lastLetter = word.Substring(word.Length - 1).ToLower();
+            if (lastLetter.Equals("s"))
+            {
+                if (word.Length >= 4)
+                {
+                    if (!pluralSuffixes.Contains(word.Substring(word.Length - 3)))
+                    {
+                        return word.Remove(word.Length - 1); // removes final "s"
+                    } // if; the last 3 chars do not match anything stored in common english suffixes containing the letter "s"
+                } // if; minimum letter count in word for rule to generally apply
+            } // if; plural check
+
+            string lastTwoLetters = word.Substring(word.Length - 2).ToLower();
+            if (lastTwoLetters.Equals("en") || lastTwoLetters.Equals("ed"))
+            {
+                return word.Remove(word.Length - 2);
+            } // if; plural check
+            return word;
+        } // function RemoveTenseOrPlural
+
         public static string[] GetSeteneceWordTypePattern(string[] splitSentence, Dictionary<string, string[]> sqlAsDict)
         {
+            // TODO: --1-- need to parse for suffixes to accurately get certain words since they're not in the dictionary passed in. Return "?" or "NA" if not available
             UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
             string[] wordPattern = new string[splitSentence.Length];
-            string[] wordPatternType = new string[1];
-            int wordNum = -1;
             try
             {
-                foreach (string word in splitSentence)
+                Dictionary<string, Word> wordAndTheirTypes = new Dictionary<string, Word>();
+                for (int i = 0; i < splitSentence.Length; i++)
                 {
-                    wordNum++;
-                    string[] types;
-                    if (sqlAsDict.TryGetValue(word.ToProper(), out types))
+
+                    string[] dictTypes = null; // initialize
+                    sqlAsDict.TryGetValue(splitSentence[i].ToProper(), out dictTypes);
+
+                    if (dictTypes == null)
                     {
-                        types = RemoveNullOrWhiteSpaceIndexes(types); // returns the string array of the word types for that word and removes all empty values
-
-                        string typesHold = null;
-
-                        for (int i = 0; i < types?.Length; i++)
+                        string wordCheck = RemoveTenseOrPlural(splitSentence[i]);
+                        if (!splitSentence[i].Equals(wordCheck))
                         {
-                            if (types[i].IndexOfAny(endPunctuation) >= 0)
-                            {
-                                // TODO: --1-- hunter work on figuring out what wordtype to choose. right here you just need to check each word type item and figure out which one it should be. the if statement is not required but it seems like something we'd need but idk
-                                //Console.WriteLine(word + "\n");
-                                //Console.WriteLine(types[i]);
-                                //Console.WriteLine(wordTypes[i]);
-                                for (int j = 0; j < wordTypes.Count; j++)
-                                {
-                                    if (types[i] == wordTypes[j] && typesHold == null)
-                                    {
-                                        typesHold = types[i];
-                                        wordPattern[wordNum] = types[i];
-                                        break;
-                                    }
-                                    else if(typesHold == types[i])
-                                    {
-                                        break;
-                                    }
-                                }
-                            }
-                        } // for
-                    } // if; key is in dictionary
-                } // foreach word
+                            sqlAsDict.TryGetValue(wordCheck.ToProper(), out dictTypes);
+                        } // if; wordCheck doesn't equal the same word again, retry the search
+                    } // if; dictTypes were not found in the dictionary
 
-                
-                for (int i = 0; i < wordPattern.Length; i++)
-                {
-                    Console.WriteLine(splitSentence[i]);
-                    Console.WriteLine(wordPattern[i] + "\n");
-                }
+                    Word metadata_word = new Word();
+
+                    if (dictTypes == null)
+                    {
+                        dictTypes = new string[] { "?" };
+                    } // if; no dictionary data found for word
+
+                    if (dictTypes.Length == 0)
+                    {
+                        dictTypes = new string[] { "?" };
+                    } // if; key is not in dictionary
+
+                    metadata_word.WordTypes = dictTypes;
+
+                    if ((i + 1) < splitSentence.Length)
+                    {
+                        metadata_word.NextWord = splitSentence[i + 1];
+                    } //  if; there is an index ensuing the current
+
+                    if ((i - 1) > 0)
+                    {
+                        metadata_word.PreceedingWord = splitSentence[i - 1];
+                    } // if; there is an index preceeding the current
+
+                    wordAndTheirTypes.Add(splitSentence[i], metadata_word); // ad the list with the word
+
+                } // for; word in the sentence
+                DetermineWordType(wordAndTheirTypes);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 UniversalFunctions.LogToFile("Exception", e);
             }
 
             return wordPattern;
         } // function; GetSeteneceWordTypePattern
+
+        private static void DetermineWordType(Dictionary<string, Word> wordAndTheirTypes)
+        {
+
+            string subject = "";
+            string verb = "";
+            string obj = "";
+
+            foreach (KeyValuePair<string, Word> kvp in wordAndTheirTypes)
+            {
+                for (int i = 0; i < kvp.Value.WordTypes.Length; i++)
+                {
+                    foreach (string wType in wordTypes)
+                    {
+                        if (kvp.Value.WordTypes[i].Length > wType.Length)
+                        {
+                            string shortenedType = kvp.Value.WordTypes[i].Substring(0, wType.Length);
+                            if (shortenedType.ToCharArray().SequenceEqual(wType.ToCharArray()))
+                            {
+                                wordAndTheirTypes[kvp.Key].WordTypes[i] = shortenedType;
+                            } // if; WordType was split at the length of the word type being checked to verify if they match, then it will update the index with the correct syntax
+                        } // if; WordTypes is longer than the specific word type being checked
+                    } // foreach; WordType found within the Word object
+                } // foreach; updates improper syntax held in the wordAndTheirTypes
+
+                // TODO: --1-- here you need to then determine what is the proper SVO
+            } // foreach; word and it's corresponding object
+        }
     }
 }

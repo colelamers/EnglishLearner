@@ -17,7 +17,7 @@ namespace EnglishLearner
      * can learn to speak based off of that information utilizing a tree.
      * SQLite database is rudimentary at best and may not have the correct info
      */
-    // TODO: --1-- OPTIMIZATIONS WILL BE NECESSARY LATER ON 
+    // TODO: --3-- OPTIMIZATIONS WILL BE NECESSARY LATER ON 
     class Main_View
     {
         Configuration _config = null; // TODO: --1-- need to determine where this should live and be addressed
@@ -29,38 +29,37 @@ namespace EnglishLearner
             StartupActions();
             Console.WriteLine("Please provide a sentence for me to learn from:\n");
 
-            // TODO: --1-- ADD TO THIS WHENEVER YOU WANT WITH AS MUCH AS YOU WANT
             List<string> listOfSentences = new List<string>()
             {
-               // "  It's the, preciou's food!",
-               // "...", // TODO: --1-- need to catch for elipses, non sentences. so maybe need to do that Is_Sentence assertion somewhere
+                "  It's the, preciou's food!",
+                "...",
                 "I like the food here?",
-                //"I like the food here?", // Since it's a dupe, it doesn't add
-                //"The quick brown fox jumped over the lazy dog.",
-                //"the slow brown fox jumped over the lazy dog.",
-                //"The crazy red fox jumped over the lazy dog.",
-                //"What are you going to do about it boy?",
-                //"How are you today?",
-                //"What did you like about the movie?",
-                //"I really hated that film.",
-                //"It was just so stupid.",
-                //"Well I agree with all those points.",
-                //"The idea of getting 6 million points became a thing, because that's all there was to do.",
-                //"It's true.",
-                //"I own several.",
-                //"Yeah.",
-                //"You're playing that game still?",
-                //"It just violates all these laws.",
-                //"Like it's doing it at the same time, and literally, these particles disappear.",
-                //"And I go, well it's an open door.",
-                //"You should totally open a club called Houstons.",
-                //"They see themselves as global citizens divorced from any allegience.",
-                //"You know she ran off with Ken, right.",
-                //"So help yourself.",
-                //"If I spent my 50 pence on a Mars Bar, it wouldn't be making enough for the day.", // uses a unique noun "mars bar"
-                //"No don't worry about it, it's just easy.",
-                //"I'm still struggling with the async functions cause the way my.",
-                //"I have very good posture."
+                "I like the food here?",  //Since it's a dupe, it doesn't add
+                "The quick brown fox jumped over the lazy dog.",
+                "the slow brown fox jumped over the lazy dog.",
+                "The crazy red fox jumped over the lazy dog.",
+                "What are you going to do about it boy?",
+                "How are you today?",
+                "What did you like about the movie?",
+                "I really hated that film.",
+                "It was just so stupid.",
+                "Well I agree with all those points.",
+                "The idea of getting 6 million points became a thing, because that's all there was to do.",
+                "It's true.",
+                "I own several.",
+                "Yeah.",
+                "You're playing that game still?",
+                "It just violates all these laws.",
+                "Like it's doing it at the same time, and literally, these particles disappear.",
+                "And I go, well it's an open door.",
+                "You should totally open a club called Houstons.",
+                "They see themselves as global citizens divorced from any allegience.",
+                "You know she ran off with Ken, right.",
+                "So help yourself.",
+                "If I spent my 50 pence on a Mars Bar, it wouldn't be making enough for the day.",  //uses a unique noun "mars bar"
+                "No don't worry about it, it's just easy.",
+                "I'm still struggling with the async functions cause the way my.",
+                "I have very good posture."
             };
 
             DateTime startTime = DateTime.Now; // DO NOT DELETE; logs time to complete
@@ -75,7 +74,7 @@ namespace EnglishLearner
 
                 sqlTransposed = _sql.ActiveQueryResults.AsEnumerable()
                     .GroupBy(x => new string(x.Field<string>("word")), y => y.Field<string>("wordtype"))
-                    .ToDictionary(x => x.Key, y => y.ToArray()); // Converts datatable into a Dictionary in the way you want it based on the column fields in the datatable
+                    .ToDictionary(x => x.Key, y => y.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().ToArray()); // Converts datatable into a Dictionary in the way you want it based on the column fields in the datatable
             } // Using Sqlite_Actions to get sql data but feed uniques into a dictionary
 
 
