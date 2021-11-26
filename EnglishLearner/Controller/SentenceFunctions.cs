@@ -210,7 +210,6 @@ namespace EnglishLearner
                 finalWord = finalWord.Remove(finalWordPunctuationIndex);
                 sentenceAsArray[sentenceAsArray.Length - 1] = finalWord;
             } // if; checks for end sentence punctuation and updates it if it's different and removes it from the split setence
-
             return punctuation;
         }
 
@@ -307,50 +306,53 @@ namespace EnglishLearner
                 string[] sentencePattern = new string[llSentence.Count];
                 int patternIndex = 0;
 
+                // TODO: --1-- put all the code below in a function. that way we can check the next word/node, retain it, then put it in place for the current and grab the next nodes values.
                 while (lln != null)
                 {
+
                     // TODO: --1-- continue adding rules to be checked for each word and preceeding words. NEED: concrete "this is typically a noun" or "this is typically a verb" etc rules that we can use to check the next word. currently only checking the previous word.
+
+                    List<string> whichIsIt = new List<string>();
+
+                    // Every single word gets checked for these as they are typically retain this type consistently throughout english
+                    if (lln.Value.CurrentWord.ToLower().Equals("the") || lln.Value.CurrentWord.ToLower().Equals("a"))
+                    { // is definite article
+                        sentencePattern[patternIndex] = "A";
+                        goto WeContinued;
+                    }
+                    else if (pronouns.Contains(lln.Value.CurrentWord.ToLower()))
+                    { // is pronoun
+                        sentencePattern[patternIndex] = "N";
+                        goto WeContinued;
+                    }
+                    else if (prepositions.Contains(lln.Value.CurrentWord.ToLower()))
+                    { // is preposition
+                        sentencePattern[patternIndex] = "P";
+                        goto WeContinued;
+                    }
+                    else if (lln.Value.CurrentWord.Length > 3)
+                    { // is adverb
+                        string lastTwoLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 2).ToLower();
+
+                        if (lastTwoLetters.Equals("ly"))
+                        { // is an adverb
+                            sentencePattern[patternIndex] = "D";
+                            goto WeContinued;
+                        }
+                    }
+                    else if (lln.Value.CurrentWord.Length > 4)
+                    {
+                        string lastTwoLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 2).ToLower();
+                        string lastThreeLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 3).ToLower();
+                        if (lastTwoLetters.Equals("ed") || lastThreeLetters.Equals("ing"))
+                        { // is past or a present-tense verb
+                            sentencePattern[patternIndex] = "V";
+                            goto WeContinued;
+                        }
+                    }
+
                     if (lln.Value.WordTypes.Length > 1)
                     { // Word Checking
-                        List<string> whichIsIt = new List<string>();
-
-                        if (lln.Value.CurrentWord.ToLower().Equals("the") || lln.Value.CurrentWord.ToLower().Equals("a"))
-                        { // is definite article
-                            sentencePattern[patternIndex] = "A";
-                            goto WeContinued;
-                        }
-                        else if (pronouns.Contains(lln.Value.CurrentWord.ToLower()))
-                        { // is pronoun
-                            sentencePattern[patternIndex] = "N";
-                            goto WeContinued;
-
-                        }
-                        else if (prepositions.Contains(lln.Value.CurrentWord.ToLower()))
-                        { // is preposition
-                            sentencePattern[patternIndex] = "P";
-                            goto WeContinued;
-                        }
-                        else if (lln.Value.CurrentWord.Length > 3) 
-                        { // is adverb
-                            string lastTwoLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 2).ToLower();
-
-                            if (lastTwoLetters.Equals("ly"))
-                            { // is an adverb
-                                sentencePattern[patternIndex] = "D";
-                                goto WeContinued;
-                            }
-                        }
-                        else if (lln.Value.CurrentWord.Length > 4)
-                        {
-                            string lastTwoLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 2).ToLower();
-                            string lastThreeLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 3).ToLower();
-                            if (lastTwoLetters.Equals("ed") || lastThreeLetters.Equals("ing"))
-                            { // is past or a present-tense verb
-                                sentencePattern[patternIndex] = "V";
-                                goto WeContinued;
-                            }
-                        }
-
                         string previousLetter = "?";
                         if (patternIndex > 0)
                         {

@@ -21,12 +21,16 @@ namespace EnglishLearner
         public bool IsItLegal { get; set; } // legal by default
         // TODO: --1-- i think i'm supposed to have current and next here...hmm
  
-        public TrieNode(string word, int currentDepth)
+        public TrieNode(string word, int currentDepth, string wordTypeAsLetter)
         {
             this.Word = word;
             this.Children = new Dictionary<string, TrieNode>();
-            this.IsItLegal = true;
             this.NodeDepth = currentDepth;
+            this.WordType = wordTypeAsLetter;
+            if (wordTypeAsLetter.Equals("?"))
+            {
+                this.IsItLegal = false;
+            }
         } // set Child Node
     }
 }

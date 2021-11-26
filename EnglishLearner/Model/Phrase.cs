@@ -20,7 +20,8 @@ namespace EnglishLearner
         public string[] Phrase_Split_Sentence { get; set; }
         public string Phrase_First_Word { get; set; }
         public char Phrase_Punctuation { get; set; }
-        public string[] SentencePattern { get; set; }
+        public string[] SentencePattern { get; set; } // TODO: --3-- consider updating this to a char[] instead because of performance reasons
+        public string HowIsItUsed { get; set; } // TODO: --1-- make some sentences that i can fully flesh out by default in memory
 
         /*
          * Sentence Pattern:
@@ -29,8 +30,7 @@ namespace EnglishLearner
          * D: Adverb
          * J: Adjective
          * N: Noun
-         * P: Pronoun
-         * R: Preposition
+         * P: Preposition
          * V: Verb
          */
 
@@ -38,6 +38,7 @@ namespace EnglishLearner
 
         public Phrase(string sentence, Dictionary<string, string[]> sqlAsDict)
         {
+            UniversalFunctions.LogToFile($"Logging new Phrase sentence:\n\t{sentence}\n");
             this.Phrase_Sentence = sentence;
             (this.Phrase_Split_Sentence, this.Phrase_Punctuation) = SentenceFunctions.GetSplitSentenceAndPunctuation(this.Phrase_Sentence);
             this.Phrase_First_Word = this.Phrase_Split_Sentence[0].ToProper();

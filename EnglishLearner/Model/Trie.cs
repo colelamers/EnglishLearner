@@ -18,11 +18,11 @@ namespace EnglishLearner
     [Serializable]
     class Trie
     {
-        public List<string[]> ListOfPatterns = new List<string[]>();
+        public List<string[]> ListOfPatterns = new List<string[]>(); // TODO: --3-- this is just going to be used for a quick inference by the program to go "hey this seems similar, let me try this!"
         public List<TrieNode> ListOfNodes = new List<TrieNode>();
         public List<Phrase> ListOfPhrases = new List<Phrase>();
         public int ChildNodeCount = 0;
-        private TrieNode Root = null, Current = null, Next = null; // TODO: --1-- i think i'm supposed to have these stored at the node not here
+        private TrieNode Root = null, Current = null, Next = null;
 
         //public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --3-- most likely will need this at each tree root for info about corresponding sentences
         // TODO: --1-- to get sibling nodes at that level, you'll need to grab all the parent keys and the parent dictionary at each child node though...hmm, and point to the same dictionary of the parent node to grab/search a sibling
@@ -34,12 +34,12 @@ namespace EnglishLearner
 
             ListOfPhrases.Add(currentPhrase);
             string[] sentence = currentPhrase.Phrase_Split_Sentence;
-            this.Root = new TrieNode(sentence[0], 0);
+            this.Root = new TrieNode(sentence[0], 0, currentPhrase.SentencePattern[0]);
 
             this.Current = this.Root;
             for (int i = 1; i < sentence.Length; i++)
             {
-                TrieNode newNode = new TrieNode(sentence[i], i);
+                TrieNode newNode = new TrieNode(sentence[i], i, currentPhrase.SentencePattern[i]);
                 this.Current.Children.Add(newNode.Word, newNode);
                 this.Current.Children.TryGetValue(sentence[i], out this.Next);
                 this.ChildNodeCount++;
@@ -56,6 +56,22 @@ namespace EnglishLearner
             this.Current = null;
         } // Constructor
 
+
+        public void FindBFS(string findThisWord)
+        {
+            DFS_Find_Word(findThisWord, this.Root);
+        } // function Find
+
+        private void BFS_Find_Word(string findThisWord, TrieNode whichNode)
+        {
+            UniversalFunctions.LogToFile("DFS_Find_Word called...");
+
+            this.ListOfNodes = new List<TrieNode>(); // empties it out and creates a new search value stored at the index
+            Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
+
+
+        }
+
         // TODO: --3-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
         // TODO: --3-- alter node function? might want to keep track of height/size/depth then so we can say "grab this phrase, and modify this word at height/depth 'x'". Would need a delete and rebuild node then.
         public void FindDFS(string findThisWord)
@@ -63,10 +79,7 @@ namespace EnglishLearner
             DFS_Find_Word(findThisWord, this.Root);
         } // function Find
 
-        private void BFS_Find_Word(string findThisWord, TrieNode whichNode)
-        {
 
-        }
 
         private void DFS_Find_Word(string findThisWord, TrieNode whichNode)
         {
@@ -95,29 +108,29 @@ namespace EnglishLearner
         public void Append(Phrase currentPhrase)
         {
             this.ListOfPatterns.Add(currentPhrase.SentencePattern);
-            this.ListOfPhrases.Add(currentPhrase);
+            this.ListOfPhrases.Add(currentPhrase); // TODO: --1-- need to not add these if there is a duplicate
 
-            DFS_Append(currentPhrase.Phrase_Split_Sentence, this.Root);
+            DFS_Append(currentPhrase, this.Root);
         } // function Append
 
-        private void DFS_Append(string[] sentence, TrieNode whichNode, int iterator = 1)
+        private void DFS_Append(Phrase currentPhrase, TrieNode whichNode, int iterator = 1)
         {
             // TODO: --1-- when it checks the exact same sentence, it will generate an index out of bounds exception because once it gets to the last node, it will still be recursive so it will be at the max index + 1 when it does the final recursive call and will hit the OOB exception there. if we can resolve this, we can ditch the try-catch block. ??? Could do an array comparison but they'd have to always be consistent.
-
-            if (sentence.Length > iterator)
+            
+            if (currentPhrase.Phrase_Split_Sentence.Length > iterator)
             {
                 this.Current = whichNode;
-                this.Current.Children.TryGetValue(sentence[iterator], out this.Next);
+                this.Current.Children.TryGetValue(currentPhrase.Phrase_Split_Sentence[iterator], out this.Next);
 
                 if (this.Next != null)
                 {
-                    DFS_Append(sentence, this.Next, iterator + 1);
+                    DFS_Append(currentPhrase, this.Next, iterator + 1);
                 } // if; recursively dive through tree
                 else
                 {
-                    for (int i = iterator; i < sentence.Length; i++)
+                    for (int i = iterator; i < currentPhrase.Phrase_Split_Sentence.Length; i++)
                     {
-                        TrieNode newNode = new TrieNode(sentence[i], i);
+                        TrieNode newNode = new TrieNode(currentPhrase.Phrase_Split_Sentence[i], i, currentPhrase.SentencePattern[i]);
                         this.Current.Children.Add(newNode.Word, newNode);
                         this.Next = this.Current.Children[newNode.Word];
                         this.ChildNodeCount++;
@@ -125,10 +138,10 @@ namespace EnglishLearner
                         while (this.Next != null)
                         {
                             this.Current = this.Next;
-                            this.Current.Children.TryGetValue(sentence[i], out this.Next);
+                            this.Current.Children.TryGetValue(currentPhrase.Phrase_Split_Sentence[i], out this.Next);
                             //this.Next = this.Current.Next;// TODO: --1-- need to fix this. we don't want a next node in the TreeNode
                         } // while
-                    } // for; word in a sentence
+                    } // for; word in a currentPhrase.Phrase_Split_Sentence
                 } // else; append tree 
                 this.Next = null;
                 this.Current = null;
