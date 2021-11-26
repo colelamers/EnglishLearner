@@ -22,6 +22,20 @@ namespace EnglishLearner
         public char Phrase_Punctuation { get; set; }
         public string[] SentencePattern { get; set; }
 
+        /*
+         * Sentence Pattern:
+         * A: Definite article
+         * C: Conjugation
+         * D: Adverb
+         * J: Adjective
+         * N: Noun
+         * P: Pronoun
+         * R: Preposition
+         * V: Verb
+         */
+
+        // TODO: --1-- if a correction happens, perform the Trie find and update all others, maybe only if they are at that location or if the preceeding and ensuing patter matches?
+
         public Phrase(string sentence, Dictionary<string, string[]> sqlAsDict)
         {
             this.Phrase_Sentence = sentence;

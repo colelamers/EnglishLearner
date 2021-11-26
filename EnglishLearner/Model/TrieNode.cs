@@ -16,7 +16,8 @@ namespace EnglishLearner
     {
         public string Word { get; set; }
         public Dictionary<string, TrieNode> Children { get; set; } // string = key, TreeNode = new KvP list of potential nodes
-        public int NodeDepth { get; set; }
+        public string WordType { get; set; } // TODO: --1-- need to add these at every time the node is created
+        public int NodeDepth { get; set; } // TODO: --1-- need this implemented
         public bool IsItLegal { get; set; } // legal by default
         // TODO: --1-- i think i'm supposed to have current and next here...hmm
  

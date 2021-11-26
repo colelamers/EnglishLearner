@@ -26,13 +26,13 @@ namespace EnglishLearner
 
         //public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --3-- most likely will need this at each tree root for info about corresponding sentences
         // TODO: --1-- to get sibling nodes at that level, you'll need to grab all the parent keys and the parent dictionary at each child node though...hmm, and point to the same dictionary of the parent node to grab/search a sibling
-        // TODO: --3-- look into an adjacency matrix
         // TODO: --4--  this will be when a tree traversal occurs, it will look to see if other nodes have things it can use for another sentence and add it in. If it doesn't make sense or is incorrect, we can provide input to let it know. DFS or BFS search
 
         public Trie(Phrase currentPhrase)
         {
             UniversalFunctions.LogToFile("Tree Constructor called...");
 
+            ListOfPhrases.Add(currentPhrase);
             string[] sentence = currentPhrase.Phrase_Split_Sentence;
             this.Root = new TrieNode(sentence[0], 0);
 
@@ -58,10 +58,15 @@ namespace EnglishLearner
 
         // TODO: --3-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
         // TODO: --3-- alter node function? might want to keep track of height/size/depth then so we can say "grab this phrase, and modify this word at height/depth 'x'". Would need a delete and rebuild node then.
-        public void Find(string findThisWord)
+        public void FindDFS(string findThisWord)
         {
             DFS_Find_Word(findThisWord, this.Root);
         } // function Find
+
+        private void BFS_Find_Word(string findThisWord, TrieNode whichNode)
+        {
+
+        }
 
         private void DFS_Find_Word(string findThisWord, TrieNode whichNode)
         {

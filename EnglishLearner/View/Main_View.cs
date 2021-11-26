@@ -30,7 +30,8 @@ namespace EnglishLearner
 
             List<string> listOfSentences = new List<string>()
             {
-                "  It's the, preciou's food!",
+                "He happilly sang in the choir!",
+               "  It's the, preciou's food!",
                 "...",
                 "I like the food here?",
                 "I like the food here?",  //Since it's a dupe, it doesn't add

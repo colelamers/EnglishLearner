@@ -19,25 +19,91 @@ namespace EnglishLearner
      */
     public static class SentenceFunctions
     {
-        private static readonly char[] endPunctuation = new char[3] { '.', '?', '!' };
-
+        private static readonly char[] endPunctuation = new char[] 
+        {
+            '.',
+            '?',
+            '!'
+        };
+        private static readonly string[] pronouns = new string[] 
+        { 
+            "i",
+            "im",
+            "me",
+            "her",
+            "him",
+            "his",
+            "himself",
+            "herself",
+            "itself",
+            "themself",
+            "themselves",
+            "he", 
+            "she", 
+            "it", 
+            "its",
+            "they",
+            "theyre",
+            "them", 
+            "we", 
+            "us"
+        };
         private static readonly string[] wordTypes = new string[]
         {
-            "n.",       //noun
-            "pron.",    //pronoun
-            "object.",  //another type for pronoun like "I"
-            "v.",       //verb
-            "adv.",     //adverb don't need because v. will grab this
-            "imp.",     //Past tense word; -ed
-            "p.p.",     //Past tense word; -ed
-            "conj.",    //and, both, because, or, then, until, if
-            "adj.",     //adjective
-            "superl.",  //adjective
-            "a.",       //adjective
-            "prep.",    //preposition; on, onto, in, to, through, from, at
+            "n.",               //noun
+            "pron.",            //pronoun
+            "object.",          //another type for pronoun like "I"
+            "obj.",             //he, she, it
+
+            "v.",               //verb
+            "imp.",             //Past tense word; -ed
+            "p.p.",             //Past tense word; -ed
+
+            "adj.",             //adjective
+            "superl.",          //adjective
+            "a.",               //adjective
+
+            "adv.",             //adverb don't need because v. will grab this
+            "conj.",            //and, both, because, or, then, until, if
+            "prep.",            //preposition; on, onto, in, to, through, from, at
             "definite article." //articles such as the
         };
-
+        private static readonly string[] prepositions = new string[] 
+        { 
+            "about",
+            "above",
+            "across",
+            "after",
+            "against",
+            "among",
+            "around",
+            "at",
+            "before",
+            "behind",
+            "below",
+            "beside ",
+            "between",
+            "by",
+            "down",
+            "during",
+            "for",
+            "from",
+            "in",
+            "inside",
+            "into",
+            "near",
+            "of",
+            "off",
+            "on",
+            "out",
+            "over",
+            "through",
+            "to",
+            "toward",
+            "under",
+            "up",
+            "with"
+            };
         private static readonly string[] pluralSuffixes = new string[]
         {
             "ous",
@@ -109,20 +175,11 @@ namespace EnglishLearner
             char[] removeChars = new char[] { '\'', '"', '/', ';', ':', '*', '^', '&', '@', ',', '[', ']', '|', '>', '<' };
             sentence = string.Join("", sentence.Split("..."));
             string[] splitSentence = string.Join("", sentence.Split(removeChars)).Split(" "); //https://stackoverflow.com/questions/7411438/remove-characters-from-c-sharp-string fastest way
-            string[] sentenceAsArray = RemoveNullOrWhiteSpaceIndexes(splitSentence);
-
-            return (sentenceAsArray, GetPunctuation(sentenceAsArray));
-        } // function GetSplitSentence
-
-        private static string[] RemoveNullOrWhiteSpaceIndexes(string[] splitSentence)
-        {
+            
             int j = 0;
             for (int i = 0; i < splitSentence.Length; i++)
             {
-                if (!string.IsNullOrWhiteSpace(splitSentence[i]))
-                {
-                    j++;
-                } // if; string is not null
+                if (!string.IsNullOrWhiteSpace(splitSentence[i])) { j++; } // if; string is not null increment j
             } // // for; each array index
 
             string[] sentenceAsArray = new string[j];
@@ -136,8 +193,8 @@ namespace EnglishLearner
                 } // if; index is not null
             } // for; each word from the passed in string[]
 
-            return sentenceAsArray;
-        } // function RemoveNullOrWhiteSpaceIndexes
+            return (sentenceAsArray, GetPunctuation(sentenceAsArray));
+        } // function GetSplitSentence
 
         private static char GetPunctuation(string[] sentenceAsArray)
         {
@@ -157,46 +214,47 @@ namespace EnglishLearner
             return punctuation;
         }
 
-        private static string RemoveTenseOrPlural(string word)
-        {
-            // Since English breaks so many rules, this is not 100% accurate for words like "When" or "Seen" or "Mess"
-            string lastLetter = word.Substring(word.Length - 1).ToLower();
-            if (lastLetter.Equals("s"))
-            {
-                if (word.Length >= 4)
-                {
-                    if (!pluralSuffixes.Contains(word.Substring(word.Length - 3)))
-                    {
-                        return word.Remove(word.Length - 1); // removes final "s"
-                    } // if; the last 3 chars do not match anything stored in common english suffixes containing the letter "s"
-                } // if; minimum letter count in word for rule to generally apply
-            } // if; plural check
-
-            string lastTwoLetters = word.Substring(word.Length - 2).ToLower();
-            if (lastTwoLetters.Equals("en") || lastTwoLetters.Equals("ed"))
-            {
-                return word.Remove(word.Length - 2);
-            } // if; plural check
-            return word;
-        } // function RemoveTenseOrPlural
-
         public static string[] GetSeteneceWordTypePattern(string[] splitSentence, Dictionary<string, string[]> sqlAsDict)
         {
             UniversalFunctions.LogToFile("GetSeteneceWordTypePattern called...");
             string[] wordPattern = new string[splitSentence.Length];
             try
             {
-                Dictionary<string, Word> wordAndTheirTypes = new Dictionary<string, Word>();
+                LinkedList<Word> llSentence = new LinkedList<Word>();
+                LinkedListNode<Word> lln = null; // root
+
                 for (int i = 0; i < splitSentence.Length; i++)
                 {
 
                     string[] dictTypes = null; // initialize
-                    sqlAsDict.TryGetValue(splitSentence[i].ToProper(), out dictTypes);
 
-                    if (dictTypes == null)
+                    if (!splitSentence[i].Equals(""))
                     {
-                        string wordCheck = RemoveTenseOrPlural(splitSentence[i]);
-                        if (!splitSentence[i].Equals(wordCheck))
+                        sqlAsDict.TryGetValue(splitSentence[i].ToProper(), out dictTypes);
+                    }
+
+                    if (dictTypes == null && splitSentence[i].Length > 3)
+                    {
+                        string wordCheck = "";
+                        string lastTwoLetters = splitSentence[i].Substring(splitSentence[i].Length - 2).ToLower();
+
+                        if (splitSentence[i].Substring(splitSentence[i].Length - 1).ToLower().Equals("s"))
+                        {
+                            if (splitSentence[i].Length >= 4)
+                            {
+                                if (!pluralSuffixes.Contains(splitSentence[i].Substring(splitSentence[i].Length - 3)))
+                                {
+                                    wordCheck = splitSentence[i].Remove(splitSentence[i].Length - 1); // removes final "s"
+                                } // if; the last 3 chars do not match anything stored in common english suffixes containing the letter "s"
+                            } // if; minimum letter count in splitSentence[i] for rule to generally apply
+                        } // if; plural check
+                        else if (lastTwoLetters.Equals("en") || lastTwoLetters.Equals("ed"))
+                        {
+                            wordCheck = splitSentence[i].Remove(splitSentence[i].Length - 2);
+                        } // if; specifically because our dictionary does not contain all past tense words
+
+
+                        if (!splitSentence[i].Equals(wordCheck) && !wordCheck.Equals(""))
                         {
                             sqlAsDict.TryGetValue(wordCheck.ToProper(), out dictTypes);
                         } // if; wordCheck doesn't equal the same word again, retry the search
@@ -213,59 +271,193 @@ namespace EnglishLearner
                     {
                         dictTypes = new string[] { "?" };
                     } // if; key is not in dictionary
-
-                    metadata_word = new Word(dictTypes, splitSentence[i]);
-                    /*
-                                        if ((i + 1) < splitSentence.Length)
-                                        {
-                                            metadata_word.NextWord = splitSentence[i + 1];
-                                        } //  if; there is an index ensuing the current
-
-                                        if ((i - 1) > 0)
-                                        {
-                                            metadata_word.PreceedingWord = splitSentence[i - 1];
-                                        } // if; there is an index preceeding the current
-                    */
-                    wordAndTheirTypes.Add(splitSentence[i], metadata_word); // ad the list with the word
+                    try
+                    {
+                        lln = new LinkedListNode<Word>(new Word(dictTypes, splitSentence[i]));
+                        llSentence.AddLast(lln);
+                    }
+                    catch (Exception e)
+                    {
+                        UniversalFunctions.LogToFile("Exception", e);
+                    }
 
                 } // for; word in the sentence
 
-                foreach (KeyValuePair<string, Word> kvp in wordAndTheirTypes)
+                // TODO: --2-- might be able to combine this with the code following it
+                foreach (Word hWord in llSentence)
                 {
-                    for (int i = 0; i < kvp.Value.WordTypes.Length; i++)
+                    for (int i = 0; i < hWord.WordTypes.Length; i++)
                     {
                         foreach (string wType in wordTypes)
                         {
-                            // TODO: --3-- might need to check in this part of the loop in case it starts pulling non standard values
-                            if (kvp.Value.WordTypes[i].Length > wType.Length)
+                            if (hWord.WordTypes[i].Length > wType.Length)
                             {
-                                string shortenedType = kvp.Value.WordTypes[i].Substring(0, wType.Length);
+                                string shortenedType = hWord.WordTypes[i].Substring(0, wType.Length);
                                 if (shortenedType.ToCharArray().SequenceEqual(wType.ToCharArray()))
                                 {
-                                    wordAndTheirTypes[kvp.Key].WordTypes[i] = shortenedType;
+                                    hWord.WordTypes[i] = shortenedType;
                                 } // if; WordType was split at the length of the word type being checked to verify if they match, then it will update the index with the standardized syntax
                             } // if; WordTypes is longer than the specific word type being checked
                         } // foreach; wordType found within the Word object
                     } // foreach; word and it's corresponding object
+                    hWord.WordTypes = hWord.WordTypes.Distinct().ToArray();
                 } // foreach; kvp
 
-                string subject = "";
-                string verb = "";
-                string obj = "";
+                while (lln.Previous != null) { lln = lln.Previous; } // while; lln reverted back to root
+                string[] sentencePattern = new string[llSentence.Count];
+                int patternIndex = 0;
 
-                LinkedList<Word> llWord = new LinkedList<Word>();
-                LinkedListNode<Word> lln = null; // root
-
-                foreach (KeyValuePair<string, Word> kvp in wordAndTheirTypes)
+                while (lln != null)
                 {
-                    lln = new LinkedListNode<Word>(kvp.Value);
-                    llWord.AddLast(lln);
-                }
+                    // TODO: --1-- continue adding rules to be checked for each word and preceeding words. NEED: concrete "this is typically a noun" or "this is typically a verb" etc rules that we can use to check the next word. currently only checking the previous word.
+                    if (lln.Value.WordTypes.Length > 1)
+                    { // Word Checking
+                        List<string> whichIsIt = new List<string>();
 
-                while (lln.Previous != null) { lln = lln.Previous; } // while; revert back to root
+                        if (lln.Value.CurrentWord.ToLower().Equals("the") || lln.Value.CurrentWord.ToLower().Equals("a"))
+                        { // is definite article
+                            sentencePattern[patternIndex] = "A";
+                            goto WeContinued;
+                        }
+                        else if (pronouns.Contains(lln.Value.CurrentWord.ToLower()))
+                        { // is pronoun
+                            sentencePattern[patternIndex] = "N";
+                            goto WeContinued;
 
-                // TODO: --1-- find a noun, if you have multiple, determine based on previous/next or something, make subject, then do the same for the verb, object
-                // TODO: --1-- build the word patter at this point.
+                        }
+                        else if (prepositions.Contains(lln.Value.CurrentWord.ToLower()))
+                        { // is preposition
+                            sentencePattern[patternIndex] = "P";
+                            goto WeContinued;
+                        }
+                        else if (lln.Value.CurrentWord.Length > 3) 
+                        { // is adverb
+                            string lastTwoLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 2).ToLower();
+
+                            if (lastTwoLetters.Equals("ly"))
+                            { // is an adverb
+                                sentencePattern[patternIndex] = "D";
+                                goto WeContinued;
+                            }
+                        }
+                        else if (lln.Value.CurrentWord.Length > 4)
+                        {
+                            string lastTwoLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 2).ToLower();
+                            string lastThreeLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 3).ToLower();
+                            if (lastTwoLetters.Equals("ed") || lastThreeLetters.Equals("ing"))
+                            { // is past or a present-tense verb
+                                sentencePattern[patternIndex] = "V";
+                                goto WeContinued;
+                            }
+                        }
+
+                        string previousLetter = "?";
+                        if (patternIndex > 0)
+                        {
+                            previousLetter = sentencePattern[patternIndex - 1];
+                        }
+
+                        foreach (string wdType in lln.Value.WordTypes)
+                        { // Type Checking
+                            switch (wdType)
+                            {
+                                case "n.":
+                                case "pron.":
+                                case "object.":
+                                case "obj.":
+                                    if (previousLetter.Equals("J") || previousLetter.Equals("A"))
+                                    { // previous letter is an adjective or definite article, next is likely a noun
+                                        whichIsIt.Add("N");
+                                        break;
+                                    }
+                                    goto default;
+                                case "v.":
+                                case "p.p.":
+                                case "imp.":
+                                    if (!previousLetter.Equals("V"))
+                                    { // previous letter is an adjective or definite article, next is likely a noun
+                                        whichIsIt.Add("V");
+                                        break;
+                                    }
+                                    goto default;
+                                case "adj.":
+                                case "superl.":
+                                case "a.":
+                                    whichIsIt.Add("J");
+                                    break;
+                                case "adv.":
+                                    whichIsIt.Add("D");
+                                    break;
+                                case "conj.":
+                                    whichIsIt.Add("C");
+                                    break;
+                                case "prep.":
+                                    whichIsIt.Add("P");
+                                    break;
+                                case "definite article.":
+                                    if (!previousLetter.Equals("A") && !lln.Value.CurrentWord.ToLower().Equals("the") && !lln.Value.CurrentWord.ToLower().Equals("a"))
+                                    { // previous letter is an adjective or definite article, next is likely a noun
+                                        whichIsIt.Add("A");
+                                        break;
+                                    }
+                                    goto default;
+                                default:
+                                    whichIsIt.Add("?");
+                                    break;
+                            } // switch
+                        } // foreach; word type
+
+                        if (whichIsIt.Count == 1)
+                        {
+                            sentencePattern[patternIndex] = whichIsIt[0];
+                        }
+                        else
+                        {
+                            sentencePattern[patternIndex] = "?"; // cannot verify so left as unknown
+                        }
+                    } // if
+                    else
+                    {
+                        switch (lln.Value.WordTypes[0])
+                        {
+                            case "n.":
+                            case "pron.":
+                            case "object.":
+                            case "obj.":
+                                sentencePattern[patternIndex] = "N";
+                                break;
+                            case "v.":
+                            case "p.p.":
+                            case "imp.":
+                                sentencePattern[patternIndex] = "V";
+                                break;
+                            case "adj.":
+                            case "superl.":
+                            case "a.":
+                                sentencePattern[patternIndex] = "J";
+                                break;
+                            case "adv.":
+                                sentencePattern[patternIndex] = "D";
+                                break;
+                            case "conj.":
+                                sentencePattern[patternIndex] = "C";
+                                break;
+                            case "prep.":
+                                sentencePattern[patternIndex] = "P";
+                                break;
+                            case "definite article.":
+                                sentencePattern[patternIndex] = "A";
+                                break;
+                            default:
+                                sentencePattern[patternIndex] = "?";
+                                break;
+                        } // switch
+                    } // else
+                    WeContinued:
+                        patternIndex++;
+                        lln = lln.Next;
+                } // while
+                wordPattern = sentencePattern;
             } // try
             catch (Exception e)
             {
@@ -274,8 +466,6 @@ namespace EnglishLearner
 
             return wordPattern;
         } // function; GetSeteneceWordTypePattern
-
-
 
     } // class SentenceFunctions
 } // namespsace
