@@ -4,6 +4,9 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite; // NuGet package;
 using System.Data;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Text;
 
 namespace EnglishLearner
 {
@@ -25,7 +28,6 @@ namespace EnglishLearner
 
         private void Run()
         {
-            // TODO: --3-- trap in a loop to take user input and other things
             UniversalFunctions.LogToFile("Function Run called...");
             StartupActions();
             using (Sqlite_Actions _sql = new Sqlite_Actions(_config.SolutionDirectory + "\\Data", "Dictionary"))
@@ -39,7 +41,7 @@ namespace EnglishLearner
 
             try
             {
-                //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
+                this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
             }
             catch (Exception e)
             {
@@ -50,9 +52,9 @@ namespace EnglishLearner
             {
                 List<string> listOfSentences = new List<string>()
                 {
-/*                    "Hi, how are you?",
+                    "Hi, how are you?",
                     "Hey, how is it going?",
-                    "What's your name?",*/
+                    "What's your name?",
                     "Hello, I am a sentence learning AI.",
                     "I know a few things already, so lets chat and increase my memory!",
                     "Yeah.",
@@ -97,21 +99,21 @@ namespace EnglishLearner
                 UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
             }
 
+
+            Console.WriteLine("==================================================\n" +
+                              "==================English Learner=================\n" +
+                              "==================================================\n\n");
+
             bool interact = true;
             while (interact)
             {
-
-                Console.WriteLine("==================================================\n" +
-                                  "==================English Learner=================\n" +
-                                  "==================================================\n\n");
-                MainMenu: // go back here
-                Console.WriteLine("...Options:\n\n" +
+                MainMenu:
+                Console.WriteLine("Options:\n\n" +
                                   "1) Add individual Sentence\n" +
                                   "2) Help me with a sentence\n" +
                                   "3) Chat\n" +
                                   "4) Find a word I might know\n" + // TODO: --1-- the find function may not be great right now
                                   "5) Exit\n");
-
                 try
                 {
                     switch (Console.ReadKey().KeyChar)
@@ -121,90 +123,148 @@ namespace EnglishLearner
                             TrieAction(Console.ReadLine());
                             break;
                         case '2':
-                            bool fixedASentence = false;
+                            Console.WriteLine("Type the index to correct the TYPE. Options:\n\t\"--exit\": Return to main menu.\n\t\"--help\": Display word types\n\t\"--skip\": Go to next one");
+                            string[] wordTypes = new string[] { "A", "C", "D", "J", "N", "P", "V" };
 
+                            // TODO: --2-- i kinda hate this but i'm running out of time so this is just gonna have to do...do it functionally returning trues/falses
                             foreach (string key in trieDict.Keys)
                             {
+                                trieDict[key].Find_Sentence();
                                 foreach (Phrase zPhrase in trieDict[key].ListOfPhrases)
-                                {
-                                    Console.WriteLine("\nHere is a sentence that has some unknowns. Can you correct them?\n");
-                                    if (zPhrase.SentencePattern.Contains("?"))
+                                { // Each Phrase
+                                    int phraseIndex = trieDict[key].ListOfPhrases.IndexOf(zPhrase);
+                                    bool updateHappened = false;
+                                    int indexUpdated = 0;
+                                    string typeGiven = "";
+
+                                    // TODO: --1-- currently hardcoded only to fix sentences, not to revise them later. might need the DFS_Find() with the linked list for that one instead
+                                    while (zPhrase.SentencePattern.Contains("?")) 
                                     {
-                                        int wordSpaceSizing = 0;
-                                        foreach (string word in zPhrase.Phrase_Split_Sentence)
-                                        {
-                                            if (word.Length > wordSpaceSizing)
-                                            {
-                                                wordSpaceSizing = word.Length;
-                                            }
-                                        } // foreach; gets the largest sized word to make pretty printing
-
-                                        Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
-
-                                        for (int i = 0; i < zPhrase.Phrase_Split_Sentence.Length; i++)
-                                        {
-                                            Console.Write($"\t{i}\t|    ");
-
-                                            int differenceInLength = wordSpaceSizing - zPhrase.Phrase_Split_Sentence[i].Length;
-                                            int tackOnExtra = differenceInLength % 2;
-                                            int evenSpaces = (differenceInLength - tackOnExtra) / 2;
-
-                                            for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                                            Console.Write(zPhrase.Phrase_Split_Sentence[i]);
-                                            for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                                            if (tackOnExtra > 0) { Console.Write(" "); }
-
-                                            Console.Write($"   |\t{zPhrase.SentencePattern[i]}\n");
-                                        } // for; calculates difference between max word size and current word size to print pretty
-                                    } // if; contains "?"
-
-                                    Console.WriteLine("Type the word or the index to correct that word. Type \"exit\" to leave.\n");
-                                    while (zPhrase.SentencePattern.Contains("?") || !Console.ReadLine().Equals("exit"))
-                                    {
-                                        // TODO: --1-- come back to this to figure out what to do when processing a word. Need to find the node in the trie, then update the phrase, and the node. need to revise find to only find one occurance at a location, not every single one.
+                                        Console.WriteLine("\nHere is a sentence that has some unknowns. Can you correct them?\n");
+                                        PrintPhraseInfo(zPhrase);
                                         try
                                         {
-                                            var decision = Console.ReadLine();
+                                            Console.WriteLine("What index to correct?");
+                                            string decision = Console.ReadLine();
 
-                                            if (decision.Length == 1)
+                                            if (decision.ToLower().Equals("--exit"))
+                                            { // checks in case the user wishes to exit prematurely
+                                                goto MainMenu;
+                                            }
+                                            else if (decision.Equals("--skip"))
+                                            { // skips to the next iteration
+                                                continue;
+                                            }
+                                            else if (decision.ToLower().Equals("--help"))
+                                            {
+                                                Console.WriteLine("\n\tHelp: Select the index number of the word you wish to correct.\n");
+                                            }
+                                            else if (decision.ToLower().Equals("--print"))
+                                            {
+                                                PrintPhraseInfo(zPhrase);
+                                            }
+                                            else if (int.TryParse(decision, out indexUpdated))
                                             { // find index
+                                                bool findingNode = true;
+                                                while (findingNode)
+                                                {
+                                                    Console.WriteLine("What type should it be?");
+                                                    string userin = Console.ReadLine();
+                                                    typeGiven = userin.ToUpper();
 
-                                            }
-                                            else
-                                            { // find word
-
-                                            }
-                                        }
+                                                    if (typeGiven.ToLower().Equals("--help"))
+                                                    {
+                                                        Console.WriteLine("\n\tHelp: What type of word should this be?\nSentence Pattern:\nA: Definite article\nC: Conjugation\nD: Adverb\nJ: Adjective\nN: Noun\nP: Preposition\nV: Verb\n");
+                                                    }
+                                                    else if (typeGiven.ToLower().Equals("--exit"))
+                                                    {
+                                                        goto MainMenu;
+                                                    }
+                                                    else if (!wordTypes.Contains(typeGiven))
+                                                    {
+                                                        Console.WriteLine("Not a valid input. Please use --help to see valid TYPE keys.\n");
+                                                    }
+                                                    else
+                                                    {
+                                                        FindNode fnLookup = new FindNode(zPhrase, indexUpdated, typeGiven);
+                                                        trieDict[key].DFS_Update_WordType(fnLookup);
+                                                        findingNode = false;
+                                                        updateHappened = true;
+                                                    } // else
+                                                } // while
+                                            } // if
+                                        } // try
                                         catch (Exception e)
                                         {
                                             Console.WriteLine("Something went wrong. Please see error log for details.\n");
                                             UniversalFunctions.LogToFile("Main Menu Choice 2: Error", e);
-                                        }
+                                        } // catch
 
-                                    } // while; pattern contains "?"
-                                } // foreach; Phrase
+                                        if (updateHappened && indexUpdated != -1)
+                                        { // Updates the trie
+                                            trieDict[key].ListOfPhrases[phraseIndex].SentencePattern[indexUpdated] = typeGiven;
+                                            zPhrase.SentencePattern[indexUpdated] = typeGiven;
+
+                                            // Resets data
+                                            updateHappened = false;
+                                            indexUpdated = -1;
+                                            typeGiven = "";
+                                        }
+                                    } // while
+                                } // foreach
+                                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             } // foreach; trieDict key
+                            Console.WriteLine("All indexes updated!\n");
                             break;
                         case '3':
                             // TODO: --1-- provide a "how would you respond to this statement/question?" and then cache a Trie with direct responses to something in particular maybe.
                             break;
                         case '4':
+                            // TODO: --1-- work on this
                             break;
                         case '5':
+                            // TODO: --1-- work on this
                             interact = false;
                             break;
                     } // switch
-                    goto MainMenu; // goes back to the beginning of the app again
-                }
+                } // try
                 catch (Exception e)
                 {
                     Console.WriteLine("Uh oh, it seems like you entered an improper input. Please try again.");
                     UniversalFunctions.LogToFile("Exception at Main Menu.", e);
                 }
-                
-            } // while
-
+            } // while; main menu
         } // function Run;
+
+        private void PrintPhraseInfo(Phrase zPhrase)
+        {
+            int wordSpaceSizing = 0;
+            foreach (string word in zPhrase.Phrase_Split_Sentence)
+            {
+                if (word.Length > wordSpaceSizing)
+                {
+                    wordSpaceSizing = word.Length;
+                }
+            } // foreach; gets the largest sized word to make pretty printing
+
+            Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
+
+            for (int i = 0; i < zPhrase.Phrase_Split_Sentence.Length; i++)
+            {
+                Console.Write($"\t{i}\t|    ");
+
+                int differenceInLength = wordSpaceSizing - zPhrase.Phrase_Split_Sentence[i].Length;
+                int tackOnExtra = differenceInLength % 2;
+                int evenSpaces = (differenceInLength - tackOnExtra) / 2;
+
+                for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
+                Console.Write(zPhrase.Phrase_Split_Sentence[i]);
+                for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
+                if (tackOnExtra > 0) { Console.Write(" "); }
+
+                Console.Write($"   |\t{zPhrase.SentencePattern[i]}\n");
+            } // for; calculates difference between max word size and current word size to print pretty
+        }
 
         private void TrieAction(string sentence)
         {
@@ -214,15 +274,22 @@ namespace EnglishLearner
                 {
                     var nsp = new Phrase(sentence, this.sqlTransposed);
                     Trie trieRoot;
-                    trieDict.TryGetValue(nsp.Phrase_First_Word, out trieRoot);
+                    this.trieDict.TryGetValue(nsp.Phrase_First_Word, out trieRoot);
+
+                    /*
+                     * TODO: --1-- to merge trie stuff
+                     * just merge new stuff with mine. mine will be the definite one. all new info will be added to mine but none of my sentences will be overwritten.
+                     * 
+                     */
+
 
                     if (trieRoot != null)
                     {
-                        trieDict[nsp.Phrase_First_Word].Append(nsp);
+                        this.trieDict[nsp.Phrase_First_Word].Append(nsp);
                     } // if
                     else
                     {
-                        trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp));
+                        this.trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp));
                     } // else
                 } // if; sentence length > 1
             } // try
@@ -232,7 +299,6 @@ namespace EnglishLearner
             }
         }
 
-        #region Startup_Functions
         private void StartupActions()
         {
             UniversalFunctions.LogToFile("Function StartupActions called...");
@@ -257,8 +323,5 @@ namespace EnglishLearner
             Main_View n_View = new Main_View();
             n_View.Run(); // Exists because we can't do some things within a static function like Main so handling everything in a non-static run function
         } // function Main;
-
-        #endregion Startup
-
-    }
-}
+    } // class
+} // namespace

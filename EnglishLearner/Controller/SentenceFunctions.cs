@@ -224,7 +224,6 @@ namespace EnglishLearner
 
                 for (int i = 0; i < splitSentence.Length; i++)
                 {
-
                     string[] dictTypes = null; // initialize
 
                     if (!splitSentence[i].Equals(""))
@@ -252,7 +251,6 @@ namespace EnglishLearner
                             wordCheck = splitSentence[i].Remove(splitSentence[i].Length - 2);
                         } // if; specifically because our dictionary does not contain all past tense words
 
-
                         if (!splitSentence[i].Equals(wordCheck) && !wordCheck.Equals(""))
                         {
                             sqlAsDict.TryGetValue(wordCheck.ToProper(), out dictTypes);
@@ -277,11 +275,12 @@ namespace EnglishLearner
                     }
                     catch (Exception e)
                     {
-                        UniversalFunctions.LogToFile("Exception", e);
+                        UniversalFunctions.LogToFile("Exception generating linked list in sentence functions", e);
                     }
 
                 } // for; word in the sentence
 
+                // TODO: --1-- use end punctuation as a check here
                 // TODO: --2-- might be able to combine this with the code following it
                 foreach (Word hWord in llSentence)
                 {
@@ -314,6 +313,17 @@ namespace EnglishLearner
 
                     List<string> whichIsIt = new List<string>();
 
+                    /*
+                     * Sentence Pattern:
+                     * A: Definite article
+                     * C: Conjugation
+                     * D: Adverb
+                     * J: Adjective
+                     * N: Noun
+                     * P: Preposition
+                     * V: Verb
+                     */
+
                     // Every single word gets checked for these as they are typically retain this type consistently throughout english
                     if (lln.Value.CurrentWord.ToLower().Equals("the") || lln.Value.CurrentWord.ToLower().Equals("a"))
                     { // is definite article
@@ -339,7 +349,7 @@ namespace EnglishLearner
                             sentencePattern[patternIndex] = "D";
                             goto WeContinued;
                         }
-                    }
+                    }                  
                     else if (lln.Value.CurrentWord.Length > 4)
                     {
                         string lastTwoLetters = lln.Value.CurrentWord.Substring(lln.Value.CurrentWord.Length - 2).ToLower();
@@ -352,7 +362,7 @@ namespace EnglishLearner
                     }
 
                     if (lln.Value.WordTypes.Length > 1)
-                    { // Word Checking
+                    { // This checks for every single word type
                         string previousLetter = "?";
                         if (patternIndex > 0)
                         {
@@ -412,14 +422,14 @@ namespace EnglishLearner
                         if (whichIsIt.Count == 1)
                         {
                             sentencePattern[patternIndex] = whichIsIt[0];
-                        }
+                        } // if
                         else
                         {
                             sentencePattern[patternIndex] = "?"; // cannot verify so left as unknown
-                        }
+                        } // else
                     } // if
                     else
-                    {
+                    { // If there is only one word type, perform this. However it is not always accuracte.
                         switch (lln.Value.WordTypes[0])
                         {
                             case "n.":

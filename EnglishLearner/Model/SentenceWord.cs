@@ -4,15 +4,14 @@ using System.Text;
 
 namespace EnglishLearner
 {
-    class Word
+    class SentenceWord
     {
-        public string[] WordTypes { get; set; }
+        public string WordType { get; set; }
         public string CurrentWord { get; set; }
 
-        public Word() { } // default constructor
-        public Word(string[] types, string word)
+        public SentenceWord(string type, string word)
         {
-            this.WordTypes = types;
+            this.WordType = type;
             this.CurrentWord = word;
         }
     }

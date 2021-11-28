@@ -10,7 +10,7 @@ namespace EnglishLearner
      * == Purpose ==
      * To store sentence memories of sentences it has been taught. Future thoughts
      * are to store additional data for each node of word information so that the 
-     * tree can do DFS or BFS traversal looking for additional words it could
+     * Trie can do DFS or BFS traversal looking for additional words it could
      * supplement in the event of an illegal or improper word.
      * 
      * Requires at least one word to traverse
@@ -18,24 +18,27 @@ namespace EnglishLearner
     [Serializable]
     class Trie
     {
-        public List<string[]> ListOfPatterns = new List<string[]>(); // TODO: --3-- this is just going to be used for a quick inference by the program to go "hey this seems similar, let me try this!"
-        public List<TrieNode> ListOfNodes = new List<TrieNode>();
         public List<Phrase> ListOfPhrases = new List<Phrase>();
+        public List<TrieNode> ListOfNodes = new List<TrieNode>();
         public int ChildNodeCount = 0;
         private TrieNode Root = null, Current = null, Next = null;
 
-        //public Dictionary<Phrase, Phrase> Sentence_Info { get; set; } // TODO: --3-- most likely will need this at each tree root for info about corresponding sentences
         // TODO: --1-- to get sibling nodes at that level, you'll need to grab all the parent keys and the parent dictionary at each child node though...hmm, and point to the same dictionary of the parent node to grab/search a sibling
-        // TODO: --4--  this will be when a tree traversal occurs, it will look to see if other nodes have things it can use for another sentence and add it in. If it doesn't make sense or is incorrect, we can provide input to let it know. DFS or BFS search
+        // TODO: --4--  this will be when a Trie traversal occurs, it will look to see if other nodes have things it can use for another sentence and add it in. If it doesn't make sense or is incorrect, we can provide input to let it know. DFS or BFS search
 
+        #region Trie Generation
         public Trie(Phrase currentPhrase)
         {
-            UniversalFunctions.LogToFile("Tree Constructor called...");
+            UniversalFunctions.LogToFile("Trie Constructor called...");
 
-            ListOfPhrases.Add(currentPhrase);
+            this.ListOfPhrases.Add(currentPhrase);
             string[] sentence = currentPhrase.Phrase_Split_Sentence;
-            this.Root = new TrieNode(sentence[0], 0, currentPhrase.SentencePattern[0]);
-
+            this.Root = new TrieNode(currentPhrase.Phrase_First_Word, 0, currentPhrase.SentencePattern[0]);
+            /*
+             * TODO: --2-- YOU CAN PUT put .Next and .Current here instead of making them global. Look into refactoring that!
+             * Current = x
+             * Next = y
+             */
             this.Current = this.Root;
             for (int i = 1; i < sentence.Length; i++)
             {
@@ -50,40 +53,76 @@ namespace EnglishLearner
                     this.Current.Children.TryGetValue(sentence[i], out this.Next);
                 } // while
             } // for; word in a sentence
-
-            // TODO: --3-- not sure these are needed
             this.Next = null;
             this.Current = null;
         } // Constructor
 
-
-        public void FindBFS(string findThisWord)
+        public void Append(Phrase currentPhrase, bool dfs_default = true)
         {
-            DFS_Find_Word(findThisWord, this.Root);
+            this.ListOfPhrases.Add(currentPhrase);
+            DFS_Append(currentPhrase, this.Root);
+
+            /*          if (dfs_default)
+                      {
+                      }
+                      else
+                      {
+                          BFS_Append(currentPhrase, this.Root); // TODO: --3-- unsure if this is needed
+                      }*/
+        } // function Append
+
+        #endregion Trie Generation
+
+        #region Breadth Search
+
+        private void BFS_FAI(string findThisWord, TrieNode whichNode)
+        {
+            // TODO: --1-- build this
+        }
+
+
+        public void BFS_Find_Word(string findThisWord)
+        {
+            //DFS_FAI(findThisWord, this.Root);
         } // function Find
 
-        private void BFS_Find_Word(string findThisWord, TrieNode whichNode)
+        private void BFS_FW(string findThisWord, TrieNode whichNode)
         {
-            UniversalFunctions.LogToFile("DFS_Find_Word called...");
+            UniversalFunctions.LogToFile("BFS_FW called...");
 
             this.ListOfNodes = new List<TrieNode>(); // empties it out and creates a new search value stored at the index
             Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
-
-
         }
 
-        // TODO: --3-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
-        // TODO: --3-- alter node function? might want to keep track of height/size/depth then so we can say "grab this phrase, and modify this word at height/depth 'x'". Would need a delete and rebuild node then.
-        public void FindDFS(string findThisWord)
+        #endregion Breadth Search
+
+        #region Depth Search
+
+        public void DFS_Update_WordType(FindNode fnNode)
         {
-            DFS_Find_Word(findThisWord, this.Root);
+            DFS_FW(fnNode, this.Root);
         } // function Find
 
-
-
-        private void DFS_Find_Word(string findThisWord, TrieNode whichNode)
+        private void DFS_FW(FindNode fnNode, TrieNode whichNode)
         {
-            UniversalFunctions.LogToFile("DFS_Find_Word called...");
+            UniversalFunctions.LogToFile("DFS_FW called...");
+            if (fnNode.Index == 0)
+            { // update root
+                whichNode.WordType = fnNode.Payload.ToString();
+            }
+            else if (whichNode.NodeDepth < fnNode.Index)
+            { // dive down
+                DFS_FW(fnNode, whichNode.Children[fnNode.Phrase.Phrase_Split_Sentence[whichNode.NodeDepth + 1]]);
+            }
+            else
+            { // update node down root path
+                whichNode.WordType = fnNode.Payload.ToString();
+            }
+        } // function DFS_Find_Word
+
+        private void DFS_Find_All_Instances(string findThisWord, TrieNode whichNode)
+        {
+            UniversalFunctions.LogToFile("DFS_FAI called...");
 
             this.ListOfNodes = new List<TrieNode>(); // empties it out and creates a new search value stored at the index
             Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
@@ -98,34 +137,47 @@ namespace EnglishLearner
                     {
                         this.ListOfNodes.Add(whichNode.Children[key]);
                     } // if; node equals or contains the word
-                    DFS_Find_Word(findThisWord, this.Next);
+                    DFS_Find_All_Instances(findThisWord, this.Next);
                     // TODO: --3-- add a delegate function in here? that way if we want to, we can pass in different tasks like "Print everything" or "Find all of these words" or "find the first instance of this word" or "get the height of this word"
                 } // if; next is not null
             } // foreach; key
             this.Next = null;
         } // function DFS_Find_Word
 
-        public void Append(Phrase currentPhrase)
+        private void DFS_Find_Sentence(LinkedList<SentenceWord> llSentence, ref LinkedListNode<SentenceWord> lln, TrieNode whichNode)
         {
-            this.ListOfPatterns.Add(currentPhrase.SentencePattern);
-            this.ListOfPhrases.Add(currentPhrase); // TODO: --1-- need to not add these if there is a duplicate
+            UniversalFunctions.LogToFile("DFS_Find_Sentence called...");
+            lln = new LinkedListNode<SentenceWord>(new SentenceWord(whichNode.WordType, whichNode.Word));
+            llSentence.AddLast(lln);
 
-            DFS_Append(currentPhrase, this.Root);
-        } // function Append
+            Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
+
+            foreach (string key in nodeKeys)
+            {
+                whichNode.Children.TryGetValue(key, out this.Next);
+                if (this.Next != null)
+                {
+                    DFS_Find_Sentence(llSentence, ref lln, this.Next);
+                }
+
+            } // foreach
+            this.Next = null;
+            //return lln;
+        }
 
         private void DFS_Append(Phrase currentPhrase, TrieNode whichNode, int iterator = 1)
         {
             // TODO: --1-- when it checks the exact same sentence, it will generate an index out of bounds exception because once it gets to the last node, it will still be recursive so it will be at the max index + 1 when it does the final recursive call and will hit the OOB exception there. if we can resolve this, we can ditch the try-catch block. ??? Could do an array comparison but they'd have to always be consistent.
-            
+
             if (currentPhrase.Phrase_Split_Sentence.Length > iterator)
             {
                 this.Current = whichNode;
-                this.Current.Children.TryGetValue(currentPhrase.Phrase_Split_Sentence[iterator], out this.Next);
+                this.Current.Children.TryGetValue(currentPhrase.Phrase_Split_Sentence[iterator], out this.Next); // TODO: --3-- can possibly eliminate the iterator by just using the NodeDepth. To catch for Root, you'd just have to do an if check that the NodeDepth > 0. If not, add a new root node.
 
                 if (this.Next != null)
                 {
                     DFS_Append(currentPhrase, this.Next, iterator + 1);
-                } // if; recursively dive through tree
+                } // if; recursively dive through Trie
                 else
                 {
                     for (int i = iterator; i < currentPhrase.Phrase_Split_Sentence.Length; i++)
@@ -139,13 +191,74 @@ namespace EnglishLearner
                         {
                             this.Current = this.Next;
                             this.Current.Children.TryGetValue(currentPhrase.Phrase_Split_Sentence[i], out this.Next);
-                            //this.Next = this.Current.Next;// TODO: --1-- need to fix this. we don't want a next node in the TreeNode
+                            //this.Next = this.Current.Next;// TODO: --1-- need to fix this. we don't want a next node in the TrieNode
                         } // while
                     } // for; word in a currentPhrase.Phrase_Split_Sentence
-                } // else; append tree 
+                } // else; append Trie 
                 this.Next = null;
                 this.Current = null;
             } // if; iterator == sentence word length, that means everything is a duplicate
         } // function DFS_Traversal; starts after root is chosen elsewhere
-    } // Class Tree
+
+        #endregion Depth Search
+
+        // TODO: --1-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
+        // TODO: --1-- alter node function? might want to keep track of height/size/depth then so we can say "grab this phrase, and modify this word at height/depth 'x'". Would need a delete and rebuild node then.
+
+        public void Find_All_Instances(string findThisWord, bool dfs_default = true)
+        {
+            if (dfs_default)
+            {
+                DFS_Find_All_Instances(findThisWord, this.Root);
+            }
+            else
+            {
+                BFS_FAI(findThisWord, this.Root);
+            }
+        }
+
+        public LinkedListNode<SentenceWord> Find_Sentence()
+        { // Returns the word and type association
+            LinkedList<SentenceWord> llSentence = new LinkedList<SentenceWord>();
+            LinkedListNode<SentenceWord> lln = null;
+            DFS_Find_Sentence(llSentence, ref lln, this.Root);
+            while (lln.Previous != null) { lln = lln.Previous; } // while; lln reverted back to root
+
+            return lln;
+            //llSentence.AddLast(lln);
+        }
+
+
+        private void PrintPhraseInfo(Phrase zPhrase)
+        {
+            int wordSpaceSizing = 0;
+            foreach (string word in zPhrase.Phrase_Split_Sentence)
+            {
+                if (word.Length > wordSpaceSizing)
+                {
+                    wordSpaceSizing = word.Length;
+                }
+            } // foreach; gets the largest sized word to make pretty printing
+
+            Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
+
+            for (int i = 0; i < zPhrase.Phrase_Split_Sentence.Length; i++)
+            {
+                Console.Write($"\t{i}\t|    ");
+
+                int differenceInLength = wordSpaceSizing - zPhrase.Phrase_Split_Sentence[i].Length;
+                int tackOnExtra = differenceInLength % 2;
+                int evenSpaces = (differenceInLength - tackOnExtra) / 2;
+
+                for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
+                Console.Write(zPhrase.Phrase_Split_Sentence[i]);
+                for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
+                if (tackOnExtra > 0) { Console.Write(" "); }
+
+                Console.Write($"   |\t{zPhrase.SentencePattern[i]}\n");
+            } // for; calculates difference between max word size and current word size to print pretty
+        }
+
+  
+    } // Class Trie
 } // namespace
