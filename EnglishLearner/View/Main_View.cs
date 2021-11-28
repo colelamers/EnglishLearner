@@ -41,7 +41,7 @@ namespace EnglishLearner
 
             try
             {
-                this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
+                //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
             }
             catch (Exception e)
             {
@@ -247,7 +247,7 @@ namespace EnglishLearner
         private void PrintPhraseInfo(Phrase zPhrase)
         {
             int wordSpaceSizing = 0;
-            foreach (string word in zPhrase.Split_Sentence)
+            foreach (string word in zPhrase.Phrase_Split_Sentence)
             {
                 if (word.Length > wordSpaceSizing)
                 {
@@ -257,21 +257,54 @@ namespace EnglishLearner
 
             Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
 
-            for (int i = 0; i < zPhrase.Split_Sentence.Length; i++)
+            for (int i = 0; i < zPhrase.Phrase_Split_Sentence.Length; i++)
             {
                 Console.Write($"\t{i}\t|    ");
 
-                int differenceInLength = wordSpaceSizing - zPhrase.Split_Sentence[i].Length;
+                int differenceInLength = wordSpaceSizing - zPhrase.Phrase_Split_Sentence[i].Length;
                 int tackOnExtra = differenceInLength % 2;
                 int evenSpaces = (differenceInLength - tackOnExtra) / 2;
 
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                Console.Write(zPhrase.Split_Sentence[i]);
+                Console.Write(zPhrase.Phrase_Split_Sentence[i]);
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
                 if (tackOnExtra > 0) { Console.Write(" "); }
 
                 Console.Write($"   |\t{zPhrase.SentencePattern[i]}\n");
             } // for; calculates difference between max word size and current word size to print pretty
+        }
+
+        private void CombineTrieSaveFiles(Dictionary<string, Trie> otherSave)
+        {
+            foreach (KeyValuePair<string, Trie> xTries in otherSave)
+            {
+                foreach (Phrase zPhrase in otherSave[xTries.Key].ListOfPhrases)
+                {
+                    TrieAction(this.trieDict, zPhrase);
+                }
+            }
+        }
+
+        private void TrieAction(Dictionary<string, Trie> primaryTrie, Phrase zPhrase)
+        { // TODO: --1-- need to test. If it works then test appending learned data.
+            try
+            {
+                Trie trieRoot;
+                this.trieDict.TryGetValue(zPhrase.First_Word, out trieRoot);
+
+                if (trieRoot != null)
+                {
+                    this.trieDict[zPhrase.First_Word].Append(zPhrase);
+                } // if
+                else
+                {
+                    this.trieDict.Add(zPhrase.First_Word, new Trie(zPhrase));
+                } // else
+            } // try
+            catch (Exception e)
+            {
+                UniversalFunctions.LogToFile("Exception handling Trie. Are you sure your sentence is correct?", e);
+            }
         }
 
         private void TrieAction(string sentence)

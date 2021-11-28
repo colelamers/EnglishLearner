@@ -16,7 +16,7 @@ namespace EnglishLearner
     [Serializable]
     public class Phrase
     {
-        public string[] Split_Sentence { get; set; }
+        public string[] Phrase_Split_Sentence { get; set; }
         public string First_Word { get; set; }
         public char Punctuation { get; set; }
         public string[] SentencePattern { get; set; } // TODO: --3-- consider updating this to a char[] instead because of performance reasons
@@ -38,9 +38,9 @@ namespace EnglishLearner
         public Phrase(string sentence, Dictionary<string, string[]> sqlAsDict)
         {
             UniversalFunctions.LogToFile($"Logging new Phrase sentence:\n\t{sentence}\n");
-            (this.Split_Sentence, this.Punctuation) = SentenceFunctions.GetSplitSentenceAndPunctuation(sentence);
-            this.First_Word = this.Split_Sentence[0].ToProper();
-            this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Split_Sentence, sqlAsDict);          
+            (this.Phrase_Split_Sentence, this.Punctuation) = SentenceFunctions.GetSplitSentenceAndPunctuation(sentence);
+            this.First_Word = this.Phrase_Split_Sentence[0].ToProper();
+            this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Phrase_Split_Sentence, sqlAsDict);          
         }
     }
 }

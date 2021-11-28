@@ -20,7 +20,6 @@ namespace EnglishLearner
         public int NodeDepth { get; set; }
         public bool IsItLegal { get; set; } // legal by default
         public bool RecentlyTouched { get; set; }
-        //public TrieNode Next { get; set; } // TODO: --3-- i think i'm supposed to have current and next here...hmm
  
         public TrieNode(string word, int currentDepth, string wordTypeAsLetter)
         {
@@ -29,7 +28,6 @@ namespace EnglishLearner
             this.NodeDepth = currentDepth;
             this.WordType = wordTypeAsLetter;
             this.RecentlyTouched = false;
-            //this.Next = null;
             if (wordTypeAsLetter.Equals("?"))
             {
                 this.IsItLegal = false;
