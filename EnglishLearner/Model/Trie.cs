@@ -32,8 +32,8 @@ namespace EnglishLearner
             UniversalFunctions.LogToFile("Trie Constructor called...");
 
             this.ListOfPhrases.Add(currentPhrase);
-            string[] sentence = currentPhrase.Phrase_Split_Sentence;
-            this.Root = new TrieNode(currentPhrase.Phrase_First_Word, 0, currentPhrase.SentencePattern[0]);
+            string[] sentence = currentPhrase.Split_Sentence;
+            this.Root = new TrieNode(currentPhrase.First_Word, 0, currentPhrase.SentencePattern[0]);
             /*
              * TODO: --2-- YOU CAN PUT put .Next and .Current here instead of making them global. Look into refactoring that!
              * Current = x
@@ -59,7 +59,10 @@ namespace EnglishLearner
 
         public void Append(Phrase currentPhrase, bool dfs_default = true)
         {
-            this.ListOfPhrases.Add(currentPhrase);
+            if (this.ListOfPhrases.IndexOf(currentPhrase) < 0)
+            { // Means the sentence does not exist
+                this.ListOfPhrases.Add(currentPhrase);
+            }
             DFS_Append(currentPhrase, this.Root);
 
             /*          if (dfs_default)
@@ -112,7 +115,7 @@ namespace EnglishLearner
             }
             else if (whichNode.NodeDepth < fnNode.Index)
             { // dive down
-                DFS_FW(fnNode, whichNode.Children[fnNode.Phrase.Phrase_Split_Sentence[whichNode.NodeDepth + 1]]);
+                DFS_FW(fnNode, whichNode.Children[fnNode.Phrase.Split_Sentence[whichNode.NodeDepth + 1]]);
             }
             else
             { // update node down root path
@@ -147,20 +150,51 @@ namespace EnglishLearner
         private void DFS_Find_Sentence(LinkedList<SentenceWord> llSentence, ref LinkedListNode<SentenceWord> lln, TrieNode whichNode)
         {
             UniversalFunctions.LogToFile("DFS_Find_Sentence called...");
-            lln = new LinkedListNode<SentenceWord>(new SentenceWord(whichNode.WordType, whichNode.Word));
-            llSentence.AddLast(lln);
 
-            Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
+            if (whichNode.Children.Keys.Count > 0)
+            { // determine if next is null essentially
+                foreach (string key in whichNode.Children.Keys)
+                {
+                    whichNode.Children.TryGetValue(key, out this.Next);
+                    whichNode.RecentlyTouched = true;
+                    DFS_Find_Sentence(llSentence, ref lln, this.Next);
 
-            foreach (string key in nodeKeys)
+                    if (llSentence.Count > 0)
+                    {
+                        lln = new LinkedListNode<SentenceWord>(new SentenceWord(whichNode.WordType, whichNode.Word));
+                        llSentence.AddLast(lln);
+                        break;
+                    } // means we found a false end node, now we can collect the sentence
+                } // foreach
+            }
+            else
+            { // end of trie section
+                if (whichNode.RecentlyTouched == false)
+                { // if end node is false, then add to linked list, otherwise don't
+                    whichNode.RecentlyTouched = true;
+                    lln = new LinkedListNode<SentenceWord>(new SentenceWord(whichNode.WordType, whichNode.Word));
+                    llSentence.AddLast(lln);
+                }
+            }
+
+            
+            this.Next = null;
+            //return lln;
+        }
+
+        private void ResetTrieTouchedValues(TrieNode whichNode)
+        {
+            // TODO: --1-- need to perform after a search
+            UniversalFunctions.LogToFile("ResetTrieTouchedValues called...");
+            whichNode.RecentlyTouched = false;
+
+            foreach (string key in whichNode.Children.Keys)
             {
                 whichNode.Children.TryGetValue(key, out this.Next);
-                if (this.Next != null)
-                {
-                    DFS_Find_Sentence(llSentence, ref lln, this.Next);
-                }
+                ResetTrieTouchedValues(this.Next);
 
             } // foreach
+
             this.Next = null;
             //return lln;
         }
@@ -169,10 +203,10 @@ namespace EnglishLearner
         {
             // TODO: --1-- when it checks the exact same sentence, it will generate an index out of bounds exception because once it gets to the last node, it will still be recursive so it will be at the max index + 1 when it does the final recursive call and will hit the OOB exception there. if we can resolve this, we can ditch the try-catch block. ??? Could do an array comparison but they'd have to always be consistent.
 
-            if (currentPhrase.Phrase_Split_Sentence.Length > iterator)
+            if (currentPhrase.Split_Sentence.Length > iterator)
             {
                 this.Current = whichNode;
-                this.Current.Children.TryGetValue(currentPhrase.Phrase_Split_Sentence[iterator], out this.Next); // TODO: --3-- can possibly eliminate the iterator by just using the NodeDepth. To catch for Root, you'd just have to do an if check that the NodeDepth > 0. If not, add a new root node.
+                this.Current.Children.TryGetValue(currentPhrase.Split_Sentence[iterator], out this.Next); // TODO: --3-- can possibly eliminate the iterator by just using the NodeDepth. To catch for Root, you'd just have to do an if check that the NodeDepth > 0. If not, add a new root node.
 
                 if (this.Next != null)
                 {
@@ -180,9 +214,9 @@ namespace EnglishLearner
                 } // if; recursively dive through Trie
                 else
                 {
-                    for (int i = iterator; i < currentPhrase.Phrase_Split_Sentence.Length; i++)
+                    for (int i = iterator; i < currentPhrase.Split_Sentence.Length; i++)
                     {
-                        TrieNode newNode = new TrieNode(currentPhrase.Phrase_Split_Sentence[i], i, currentPhrase.SentencePattern[i]);
+                        TrieNode newNode = new TrieNode(currentPhrase.Split_Sentence[i], i, currentPhrase.SentencePattern[i]);
                         this.Current.Children.Add(newNode.Word, newNode);
                         this.Next = this.Current.Children[newNode.Word];
                         this.ChildNodeCount++;
@@ -190,7 +224,7 @@ namespace EnglishLearner
                         while (this.Next != null)
                         {
                             this.Current = this.Next;
-                            this.Current.Children.TryGetValue(currentPhrase.Phrase_Split_Sentence[i], out this.Next);
+                            this.Current.Children.TryGetValue(currentPhrase.Split_Sentence[i], out this.Next);
                             //this.Next = this.Current.Next;// TODO: --1-- need to fix this. we don't want a next node in the TrieNode
                         } // while
                     } // for; word in a currentPhrase.Phrase_Split_Sentence
@@ -217,22 +251,39 @@ namespace EnglishLearner
             }
         }
 
-        public LinkedListNode<SentenceWord> Find_Sentence()
+        /// <summary>
+        /// Finds a new sentence that hasn't been touched recently.
+        /// </summary>
+        /// <param name="trieDict"></param>
+        /// <param name="reset_trie"></param>
+        /// <example> var n = trieDict[key].Find_Sentence(trieDict, true); var f = trieDict[key].Find_Sentence(trieDict);</example>
+        /// <returns>Returns a linked list containing the sentence, although from the tail of the LinkedList due to recursion. So remember, previous is actually the next word, next is the previous word.</returns>
+        public LinkedListNode<SentenceWord> Find_Sentence(Dictionary<string, Trie> trieDict, bool reset_trie = false)
         { // Returns the word and type association
             LinkedList<SentenceWord> llSentence = new LinkedList<SentenceWord>();
             LinkedListNode<SentenceWord> lln = null;
-            DFS_Find_Sentence(llSentence, ref lln, this.Root);
-            while (lln.Previous != null) { lln = lln.Previous; } // while; lln reverted back to root
 
+            if (reset_trie == true)
+            {
+                foreach (string key in trieDict.Keys)
+                { // resets trie for searching
+                    ResetTrieTouchedValues(trieDict[key].Root);
+                }
+            }
+
+            foreach (string key in trieDict.Keys)
+            {
+                DFS_Find_Sentence(llSentence, ref lln, trieDict[key].Root);
+                if (llSentence.Count > 0) { break; }
+            }
+            while (lln.Previous != null) { lln = lln.Previous; } // while; lln reverted back to root
             return lln;
-            //llSentence.AddLast(lln);
         }
 
-
         private void PrintPhraseInfo(Phrase zPhrase)
-        {
+        { // TODO: --3-- maybe ditch this
             int wordSpaceSizing = 0;
-            foreach (string word in zPhrase.Phrase_Split_Sentence)
+            foreach (string word in zPhrase.Split_Sentence)
             {
                 if (word.Length > wordSpaceSizing)
                 {
@@ -242,16 +293,16 @@ namespace EnglishLearner
 
             Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
 
-            for (int i = 0; i < zPhrase.Phrase_Split_Sentence.Length; i++)
+            for (int i = 0; i < zPhrase.Split_Sentence.Length; i++)
             {
                 Console.Write($"\t{i}\t|    ");
 
-                int differenceInLength = wordSpaceSizing - zPhrase.Phrase_Split_Sentence[i].Length;
+                int differenceInLength = wordSpaceSizing - zPhrase.Split_Sentence[i].Length;
                 int tackOnExtra = differenceInLength % 2;
                 int evenSpaces = (differenceInLength - tackOnExtra) / 2;
 
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                Console.Write(zPhrase.Phrase_Split_Sentence[i]);
+                Console.Write(zPhrase.Split_Sentence[i]);
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
                 if (tackOnExtra > 0) { Console.Write(" "); }
 

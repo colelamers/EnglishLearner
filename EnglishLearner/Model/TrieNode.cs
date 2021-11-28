@@ -19,6 +19,7 @@ namespace EnglishLearner
         public string WordType { get; set; } // TODO: --1-- need to add these at every time the node is created
         public int NodeDepth { get; set; }
         public bool IsItLegal { get; set; } // legal by default
+        public bool RecentlyTouched { get; set; }
         //public TrieNode Next { get; set; } // TODO: --3-- i think i'm supposed to have current and next here...hmm
  
         public TrieNode(string word, int currentDepth, string wordTypeAsLetter)
@@ -27,6 +28,7 @@ namespace EnglishLearner
             this.Children = new Dictionary<string, TrieNode>();
             this.NodeDepth = currentDepth;
             this.WordType = wordTypeAsLetter;
+            this.RecentlyTouched = false;
             //this.Next = null;
             if (wordTypeAsLetter.Equals("?"))
             {

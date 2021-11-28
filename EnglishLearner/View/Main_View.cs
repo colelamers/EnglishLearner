@@ -112,7 +112,7 @@ namespace EnglishLearner
                                   "1) Add individual Sentence\n" +
                                   "2) Help me with a sentence\n" +
                                   "3) Chat\n" +
-                                  "4) Find a word I might know\n" + // TODO: --1-- the find function may not be great right now
+                                  "4) Find a word I might know\n" +
                                   "5) Exit\n");
                 try
                 {
@@ -121,6 +121,7 @@ namespace EnglishLearner
                         case '1':
                             Console.Write("Please provide for me a full sentence to learn from. End punctuation is not required, but it can help!\n");
                             TrieAction(Console.ReadLine());
+                            UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
                         case '2':
                             Console.WriteLine("Type the index to correct the TYPE. Options:\n\t\"--exit\": Return to main menu.\n\t\"--help\": Display word types\n\t\"--skip\": Go to next one");
@@ -129,8 +130,7 @@ namespace EnglishLearner
                             // TODO: --2-- i kinda hate this but i'm running out of time so this is just gonna have to do...do it functionally returning trues/falses
                             foreach (string key in trieDict.Keys)
                             {
-                                trieDict[key].Find_Sentence();
-                                foreach (Phrase zPhrase in trieDict[key].ListOfPhrases)
+                                foreach (Phrase zPhrase in trieDict[key].ListOfPhrases) // for would be : trieDict[key].ListOfPhrases[i] 
                                 { // Each Phrase
                                     int phraseIndex = trieDict[key].ListOfPhrases.IndexOf(zPhrase);
                                     bool updateHappened = false;
@@ -217,13 +217,21 @@ namespace EnglishLearner
                             Console.WriteLine("All indexes updated!\n");
                             break;
                         case '3':
-                            // TODO: --1-- provide a "how would you respond to this statement/question?" and then cache a Trie with direct responses to something in particular maybe.
+                            Console.Write("Hey lets chat!\n");
+                            bool doneTalking = false;
+                            while (!doneTalking)
+                            {
+                                // TODO: --1-- should hanlde the removing/deleting of a word before implementing
+                                TrieAction(Console.ReadLine());
+                                //var reply = trieDict[]
+                            }
+                            
+                            UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
                         case '4':
                             // TODO: --1-- work on this
                             break;
                         case '5':
-                            // TODO: --1-- work on this
                             interact = false;
                             break;
                     } // switch
@@ -239,7 +247,7 @@ namespace EnglishLearner
         private void PrintPhraseInfo(Phrase zPhrase)
         {
             int wordSpaceSizing = 0;
-            foreach (string word in zPhrase.Phrase_Split_Sentence)
+            foreach (string word in zPhrase.Split_Sentence)
             {
                 if (word.Length > wordSpaceSizing)
                 {
@@ -249,16 +257,16 @@ namespace EnglishLearner
 
             Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
 
-            for (int i = 0; i < zPhrase.Phrase_Split_Sentence.Length; i++)
+            for (int i = 0; i < zPhrase.Split_Sentence.Length; i++)
             {
                 Console.Write($"\t{i}\t|    ");
 
-                int differenceInLength = wordSpaceSizing - zPhrase.Phrase_Split_Sentence[i].Length;
+                int differenceInLength = wordSpaceSizing - zPhrase.Split_Sentence[i].Length;
                 int tackOnExtra = differenceInLength % 2;
                 int evenSpaces = (differenceInLength - tackOnExtra) / 2;
 
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                Console.Write(zPhrase.Phrase_Split_Sentence[i]);
+                Console.Write(zPhrase.Split_Sentence[i]);
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
                 if (tackOnExtra > 0) { Console.Write(" "); }
 
@@ -274,7 +282,7 @@ namespace EnglishLearner
                 {
                     var nsp = new Phrase(sentence, this.sqlTransposed);
                     Trie trieRoot;
-                    this.trieDict.TryGetValue(nsp.Phrase_First_Word, out trieRoot);
+                    this.trieDict.TryGetValue(nsp.First_Word, out trieRoot);
 
                     /*
                      * TODO: --1-- to merge trie stuff
@@ -285,11 +293,11 @@ namespace EnglishLearner
 
                     if (trieRoot != null)
                     {
-                        this.trieDict[nsp.Phrase_First_Word].Append(nsp);
+                        this.trieDict[nsp.First_Word].Append(nsp);
                     } // if
                     else
                     {
-                        this.trieDict.Add(nsp.Phrase_First_Word, new Trie(nsp));
+                        this.trieDict.Add(nsp.First_Word, new Trie(nsp));
                     } // else
                 } // if; sentence length > 1
             } // try
