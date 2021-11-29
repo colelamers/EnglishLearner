@@ -8,7 +8,8 @@ namespace EnglishLearner
     {
         public Phrase Phrase { get; }
         public int Index { get; }
-        public object Payload { get; set; }
+        public object NodeMemberPayload { get; set; }
+        public TrieNode NodePayload { get; set; }
 
         /// <summary>
         /// 
@@ -20,7 +21,14 @@ namespace EnglishLearner
         {
             this.Phrase = t_Phrase;
             this.Index = t_Index;
-            this.Payload = t_WhatToUpdate;
+            this.NodeMemberPayload = t_WhatToUpdate;
+        }
+
+        public FindNode(Phrase t_Phrase, TrieNode t_WhatToUpdate)
+        {
+            this.Phrase = t_Phrase;
+            this.Index = t_WhatToUpdate.NodeDepth;
+            this.NodePayload = t_WhatToUpdate;
         }
     }
 }

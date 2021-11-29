@@ -16,10 +16,9 @@ namespace EnglishLearner
     [Serializable]
     public class Phrase
     {
-        public string Sentence_NoPunctuation { get; set; }
+        public string Sentence { get; }
         public string[] Split_Sentence { get; set; }
         public string First_Word { get; set; }
-        public string Last_Word { get; set; }
         public string Punctuation { get; set; }
         public string[] SentencePattern { get; set; } // TODO: --3-- consider updating this to a char[] instead because of performance reasons
         //public string HowIsItUsed { get; set; } // TODO: --1-- make some sentences that i can fully flesh out by default in memory
@@ -41,9 +40,8 @@ namespace EnglishLearner
         {
             UniversalFunctions.LogToFile($"Logging new Phrase sentence:\n\t{sentence}\n");
             (this.Split_Sentence, this.Punctuation) = SentenceFunctions.GetSplitSentenceAndPunctuation(sentence);
+            this.Sentence = string.Join("", sentence.Split(new char[] { '.', '!', '?', ',' })) + this.Punctuation;
             this.First_Word = this.Split_Sentence[0].ToProper();
-            this.Last_Word = this.Split_Sentence[this.Split_Sentence.Length - 1];
-            this.Sentence_NoPunctuation = this.Split_Sentence.ToString();
             this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Split_Sentence, sqlAsDict);          
         }
     }

@@ -14,13 +14,14 @@ namespace EnglishLearner
     [Serializable]
     class TrieNode
     {
-        public string Word { get; set; }
         public Dictionary<string, TrieNode> Children { get; set; } // string = key, TreeNode = new KvP list of potential nodes
+        public string Word { get; set; }
         public string WordType { get; set; } // TODO: --1-- need to add these at every time the node is created
         public int NodeDepth { get; set; }
-        public bool IsItLegal { get; set; } // legal by default
         public bool RecentlyTouched { get; set; }
         public bool CanBeLastWord { get; set; }
+        public string TypesOfPunctuation { get; set; }
+        public string SearchedPunctuation { get; set; }
 
 
         public TrieNode(string word, int currentDepth, string wordTypeAsLetter)
@@ -31,10 +32,8 @@ namespace EnglishLearner
             this.WordType = wordTypeAsLetter;
             this.RecentlyTouched = false;
             this.CanBeLastWord = false;
-            if (wordTypeAsLetter.Equals("?"))
-            {
-                this.IsItLegal = false;
-            }
+            this.TypesOfPunctuation = ""; // blank by default
+            this.SearchedPunctuation = "";
         } // set Child Node
     }
 }

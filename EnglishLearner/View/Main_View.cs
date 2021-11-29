@@ -55,8 +55,7 @@ namespace EnglishLearner
                     "Hi, how are you?",
                     "Hi, how are you.",
                     "Hi, how are you today?",
-                    "Hi, how are you today sir?"
-                    /*
+                    "Hi, how are you today sir?",
                     "Hey, how is it going?",
                     "What's your name?",
                     "Hello, I am a sentence learning AI.",
@@ -92,22 +91,13 @@ namespace EnglishLearner
                     "If I spent my 50 pence on a Mars Bar, it wouldn't be making enough for the day.",  //uses a unique noun "mars bar"
                     "No don't worry about it, it's just easy.",
                     "I'm still struggling with the async functions cause the way my.",
-                    "I have very good posture."*/
+                    "I have very good posture."
                 };
 
                 foreach (string sentence in listOfSentences)
                 {
                     TrieAction(sentence);
                 } // foreach
-
-                List<string> sentences = new List<string>();
-                string x = "notEmptyYet";
-                while (!x.Equals(""))
-                {
-                    x = Trie.Find_Sentence(trieDict, true);
-                    sentences.Add(x);
-                }
-
 
                 UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
             }
@@ -158,18 +148,32 @@ namespace EnglishLearner
                             // TODO: --2-- i kinda hate this but i'm running out of time so this is just gonna have to do...do it functionally returning trues/falses
                             foreach (string key in trieDict.Keys)
                             {
-                                foreach (Phrase zPhrase in trieDict[key].ListOfPhrases) // for would be : trieDict[key].ListOfPhrases[i] 
+                                foreach (KeyValuePair<string, Phrase> kvpPhrase in trieDict[key].ListOfPhrases) // for would be : trieDict[key].ListOfPhrases[i] 
                                 { // Each Phrase
-                                    int phraseIndex = trieDict[key].ListOfPhrases.IndexOf(zPhrase);
+
+                                    //TODO: --1-- need to revise this because i'm doing it with a linked list now instead of the stupid way i was doing before
+                                    LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, kvpPhrase.Value);
+                                    var temp = lln;
+                                    List<bool> anyQuestionMarks = new List<bool>();
+                                    while (temp != null)
+                                    {
+                                        if (!temp.Value.WordType.Contains("?"))
+                                        {
+                                            anyQuestionMarks.Add(false);
+                                            temp = temp.Next;
+                                        }
+                                    }
+
+
                                     bool updateHappened = false;
                                     int indexUpdated = 0;
                                     string typeGiven = "";
 
                                     // TODO: --1-- currently hardcoded only to fix sentences, not to revise them later. might need the DFS_Find() with the linked list for that one instead
-                                    while (zPhrase.SentencePattern.Contains("?")) 
+                                    while (kvpPhrase.Value.SentencePattern.Contains("?")) 
                                     {
                                         Console.WriteLine("\nHere is a sentence that has some unknowns. Can you correct them?\n");
-                                        PrintPhraseInfo(zPhrase);
+                                        PrintPhraseInfo(lln);
                                         try
                                         {
                                             Console.WriteLine("What index to correct?");
@@ -189,7 +193,7 @@ namespace EnglishLearner
                                             }
                                             else if (decision.ToLower().Equals("--print"))
                                             {
-                                                PrintPhraseInfo(zPhrase);
+                                                PrintPhraseInfo(lln);
                                             }
                                             else if (int.TryParse(decision, out indexUpdated))
                                             { // find index
@@ -214,8 +218,20 @@ namespace EnglishLearner
                                                     }
                                                     else
                                                     {
-                                                        FindNode fnLookup = new FindNode(zPhrase, indexUpdated, typeGiven);
-                                                        trieDict[key].DFS_Update_WordType(fnLookup);
+                                                        var tmplocalLinkedList = lln;
+                                                        TrieNode tnNode = null;
+                                                        while (tmplocalLinkedList != null)
+                                                        {
+                                                            if (tmplocalLinkedList.Value.NodeDepth == indexUpdated)
+                                                            {
+                                                                tnNode = tmplocalLinkedList.Value;
+                                                                break;
+                                                            }
+                                                            tmplocalLinkedList = tmplocalLinkedList.Next;
+                                                        }
+                                                        tnNode.WordType = typeGiven;
+                                                        FindNode fnLookup = new FindNode(kvpPhrase.Value, tnNode);
+                                                        trieDict[key].Update_Node(fnLookup, "Node");
                                                         findingNode = false;
                                                         updateHappened = true;
                                                     } // else
@@ -230,8 +246,8 @@ namespace EnglishLearner
 
                                         if (updateHappened && indexUpdated != -1)
                                         { // Updates the trie
-                                            trieDict[key].ListOfPhrases[phraseIndex].SentencePattern[indexUpdated] = typeGiven;
-                                            zPhrase.SentencePattern[indexUpdated] = typeGiven;
+                                            trieDict[key].ListOfPhrases[kvpPhrase.Key].SentencePattern[indexUpdated] = typeGiven;
+                                            kvpPhrase.Value.SentencePattern[indexUpdated] = typeGiven;
 
                                             // Resets data
                                             updateHappened = false;
@@ -272,43 +288,50 @@ namespace EnglishLearner
             } // while; main menu
         } // function Run;
 
-        private void PrintPhraseInfo(Phrase zPhrase)
+        private void PrintPhraseInfo(LinkedListNode<TrieNode> list)
         {
-            int wordSpaceSizing = 0;
-            foreach (string word in zPhrase.Split_Sentence)
+            //var lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, zPhrase);
+            var temp = list;
+
+            int wordSpaceSizing = temp.Value.Word.Length;
+
+            while (temp.Next != null)
             {
-                if (word.Length > wordSpaceSizing)
+                if (temp.Next.Value.Word.Length > wordSpaceSizing)
                 {
-                    wordSpaceSizing = word.Length;
+                    wordSpaceSizing = temp.Next.Value.Word.Length;
                 }
-            } // foreach; gets the largest sized word to make pretty printing
+                temp = temp.Next;
+            }
 
             Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
 
-            for (int i = 0; i < zPhrase.Split_Sentence.Length; i++)
+            while (temp != null)
             {
+                int i = temp.Value.NodeDepth;
                 Console.Write($"\t{i}\t|    ");
 
-                int differenceInLength = wordSpaceSizing - zPhrase.Split_Sentence[i].Length;
+                int differenceInLength = wordSpaceSizing - temp.Value.Word.Length;
                 int tackOnExtra = differenceInLength % 2;
                 int evenSpaces = (differenceInLength - tackOnExtra) / 2;
 
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                Console.Write(zPhrase.Split_Sentence[i]);
+                Console.Write(temp.Value.Word);
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
                 if (tackOnExtra > 0) { Console.Write(" "); }
 
-                Console.Write($"   |\t{zPhrase.SentencePattern[i]}\n");
-            } // for; calculates difference between max word size and current word size to print pretty
-        }
+                Console.Write($"   |\t{temp.Value.WordType}\n");
+                temp = temp.Previous;
+            }
+        } // function PrintPhraseInfo (from a linked list)
 
         private void CombineTrieSaveFiles(Dictionary<string, Trie> otherSave)
         {
             foreach (KeyValuePair<string, Trie> xTries in otherSave)
             {
-                foreach (Phrase zPhrase in otherSave[xTries.Key].ListOfPhrases)
+                foreach (KeyValuePair<string, Phrase> kvpPhrase in otherSave[xTries.Key].ListOfPhrases)
                 {
-                    TrieAction(this.trieDict, zPhrase);
+                    TrieAction(this.trieDict, kvpPhrase.Value);
                 }
             }
         }
