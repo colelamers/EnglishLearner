@@ -20,7 +20,9 @@ namespace EnglishLearner
         public int NodeDepth { get; set; }
         public bool IsItLegal { get; set; } // legal by default
         public bool RecentlyTouched { get; set; }
- 
+        public bool CanBeLastWord { get; set; }
+
+
         public TrieNode(string word, int currentDepth, string wordTypeAsLetter)
         {
             this.Word = word;
@@ -28,6 +30,7 @@ namespace EnglishLearner
             this.NodeDepth = currentDepth;
             this.WordType = wordTypeAsLetter;
             this.RecentlyTouched = false;
+            this.CanBeLastWord = false;
             if (wordTypeAsLetter.Equals("?"))
             {
                 this.IsItLegal = false;

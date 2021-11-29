@@ -165,7 +165,7 @@ namespace EnglishLearner
         } // function Split_Paragraph
 
         // TODO: --3-- add a function that replaces & with "and" or + with "plus" or - with "minus" and things like that
-        public static (string[], char) GetSplitSentenceAndPunctuation(string sentence)
+        public static (string[], string) GetSplitSentenceAndPunctuation(string sentence)
         {
             UniversalFunctions.LogToFile("GetSplitSentenceAndPunctuation called...");
             /*
@@ -196,17 +196,17 @@ namespace EnglishLearner
             return (sentenceAsArray, GetPunctuation(sentenceAsArray));
         } // function GetSplitSentence
 
-        private static char GetPunctuation(string[] sentenceAsArray)
+        private static string GetPunctuation(string[] sentenceAsArray)
         {
             UniversalFunctions.LogToFile("GetPunctuation called...");
 
             string finalWord = sentenceAsArray[sentenceAsArray.Length - 1];
             int finalWordPunctuationIndex = finalWord.Length - 1;
-            char punctuation = '.';
+            string punctuation = ".";
 
             if (finalWord.IndexOfAny(endPunctuation) >= 0)
             {
-                punctuation = finalWord[finalWordPunctuationIndex];
+                punctuation = finalWord[finalWordPunctuationIndex].ToString();
                 finalWord = finalWord.Remove(finalWordPunctuationIndex);
                 sentenceAsArray[sentenceAsArray.Length - 1] = finalWord;
             } // if; checks for end sentence punctuation and updates it if it's different and removes it from the split setence

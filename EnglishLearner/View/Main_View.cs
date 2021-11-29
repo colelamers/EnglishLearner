@@ -53,6 +53,10 @@ namespace EnglishLearner
                 List<string> listOfSentences = new List<string>()
                 {
                     "Hi, how are you?",
+                    "Hi, how are you.",
+                    "Hi, how are you today?",
+                    "Hi, how are you today sir?"
+                    /*
                     "Hey, how is it going?",
                     "What's your name?",
                     "Hello, I am a sentence learning AI.",
@@ -88,13 +92,22 @@ namespace EnglishLearner
                     "If I spent my 50 pence on a Mars Bar, it wouldn't be making enough for the day.",  //uses a unique noun "mars bar"
                     "No don't worry about it, it's just easy.",
                     "I'm still struggling with the async functions cause the way my.",
-                    "I have very good posture."
+                    "I have very good posture."*/
                 };
 
                 foreach (string sentence in listOfSentences)
                 {
                     TrieAction(sentence);
                 } // foreach
+
+                List<string> sentences = new List<string>();
+                string x = "notEmptyYet";
+                while (!x.Equals(""))
+                {
+                    x = Trie.Find_Sentence(trieDict, true);
+                    sentences.Add(x);
+                }
+
 
                 UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
             }
@@ -112,15 +125,30 @@ namespace EnglishLearner
                                   "1) Add individual Sentence\n" +
                                   "2) Help me with a sentence\n" +
                                   "3) Chat\n" +
-                                  "4) Find a word I might know\n" +
+                                  "4) Find a word I might know\n" +  
                                   "5) Exit\n");
                 try
                 {
                     switch (Console.ReadKey().KeyChar)
                     {
                         case '1':
-                            Console.Write("Please provide for me a full sentence to learn from. End punctuation is not required, but it can help!\n");
-                            TrieAction(Console.ReadLine());
+                            bool wantToContinue = true;
+                            while (wantToContinue)
+                            {
+                                Console.WriteLine("Please provide for me a full sentence to learn from. End punctuation is not required, but it can help!\n");
+                                TrieAction(Console.ReadLine());
+
+                                Console.WriteLine("Would you like to provide another sentence? y/n\n");
+
+                                while (!Console.ReadKey().KeyChar.Equals("y") || 
+                                       !Console.ReadKey().KeyChar.Equals("Y") || 
+                                       !Console.ReadKey().KeyChar.Equals("n") || 
+                                       !Console.ReadKey().KeyChar.Equals("N"))
+                                {
+                                    Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
+                                } // while
+                            }
+
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
                         case '2':
@@ -247,7 +275,7 @@ namespace EnglishLearner
         private void PrintPhraseInfo(Phrase zPhrase)
         {
             int wordSpaceSizing = 0;
-            foreach (string word in zPhrase.Phrase_Split_Sentence)
+            foreach (string word in zPhrase.Split_Sentence)
             {
                 if (word.Length > wordSpaceSizing)
                 {
@@ -257,16 +285,16 @@ namespace EnglishLearner
 
             Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
 
-            for (int i = 0; i < zPhrase.Phrase_Split_Sentence.Length; i++)
+            for (int i = 0; i < zPhrase.Split_Sentence.Length; i++)
             {
                 Console.Write($"\t{i}\t|    ");
 
-                int differenceInLength = wordSpaceSizing - zPhrase.Phrase_Split_Sentence[i].Length;
+                int differenceInLength = wordSpaceSizing - zPhrase.Split_Sentence[i].Length;
                 int tackOnExtra = differenceInLength % 2;
                 int evenSpaces = (differenceInLength - tackOnExtra) / 2;
 
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                Console.Write(zPhrase.Phrase_Split_Sentence[i]);
+                Console.Write(zPhrase.Split_Sentence[i]);
                 for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
                 if (tackOnExtra > 0) { Console.Write(" "); }
 
@@ -285,6 +313,11 @@ namespace EnglishLearner
             }
         }
 
+        /// <summary>
+        /// This is for appending data from multiple save files since they'll contain already prebuilt datasets
+        /// </summary>
+        /// <param name="primaryTrie"></param>
+        /// <param name="zPhrase"></param>
         private void TrieAction(Dictionary<string, Trie> primaryTrie, Phrase zPhrase)
         { // TODO: --1-- need to test. If it works then test appending learned data.
             try

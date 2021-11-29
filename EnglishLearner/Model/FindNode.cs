@@ -8,7 +8,7 @@ namespace EnglishLearner
     {
         public Phrase Phrase { get; }
         public int Index { get; }
-        public object Payload { get; }
+        public object Payload { get; set; }
 
         /// <summary>
         /// 
@@ -16,7 +16,7 @@ namespace EnglishLearner
         /// <param name="t_Sentence">Phrase sentence array</param>
         /// <param name="t_Index">Index of the word in the sentence array</param>
         /// <param name="UpdatePayload">Whatever at the node you wish to update</param>
-        public FindNode(Phrase t_Phrase, int t_Index, object t_WhatToUpdate)
+        public FindNode(Phrase t_Phrase, int t_Index, object t_WhatToUpdate = null)
         {
             this.Phrase = t_Phrase;
             this.Index = t_Index;
