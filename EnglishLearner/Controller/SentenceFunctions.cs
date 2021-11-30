@@ -280,7 +280,7 @@ namespace EnglishLearner
 
                 } // for; word in the sentence
 
-                // TODO: --1-- use end punctuation as a check here
+                // TODO: --3-- use end punctuation as a check here
                 // TODO: --2-- might be able to combine this with the code following it
                 foreach (Word hWord in llSentence)
                 {
@@ -305,11 +305,9 @@ namespace EnglishLearner
                 string[] sentencePattern = new string[llSentence.Count];
                 int patternIndex = 0;
 
-                // TODO: --1-- put all the code below in a function. that way we can check the next word/node, retain it, then put it in place for the current and grab the next nodes values.
+                // TODO: --3-- put all the code below in a function. that way we can check the next word/node, retain it, then put it in place for the current and grab the next nodes values.
                 while (lln != null)
                 {
-
-                    // TODO: --1-- continue adding rules to be checked for each word and preceeding words. NEED: concrete "this is typically a noun" or "this is typically a verb" etc rules that we can use to check the next word. currently only checking the previous word.
 
                     List<string> whichIsIt = new List<string>();
 
@@ -332,7 +330,7 @@ namespace EnglishLearner
                     }
                     else if (pronouns.Contains(lln.Value.CurrentWord.ToLower()))
                     { // is pronoun
-                        sentencePattern[patternIndex] = "N"; // TODO: --1-- consider changing this to be pronoun not noun?
+                        sentencePattern[patternIndex] = "N"; // TODO: --3-- consider changing this to be pronoun not noun?
                         goto WeContinued;
                     }
                     else if (prepositions.Contains(lln.Value.CurrentWord.ToLower()))

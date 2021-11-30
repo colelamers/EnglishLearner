@@ -19,9 +19,9 @@ namespace EnglishLearner
         public string Sentence { get; }
         public string Sentence_NoPunctuation { get; }
         public string[] Split_Sentence { get; set; }
-        public string First_Word { get; set; }
+        public string First_Word { get; set; } // TODO: --3-- think about removing cause it's not really necessary, just enhances readability
         public string Punctuation { get; set; }
-        public string[] SentencePattern { get; set; } // TODO: --3-- consider updating this to a char[] instead because of performance reasons
+        public string[] SentencePattern { get; set; } // TODO: --3-- consider removing this or something after node creation?
 
         /*
          * Sentence Pattern:

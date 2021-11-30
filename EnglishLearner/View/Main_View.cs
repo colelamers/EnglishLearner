@@ -91,7 +91,8 @@ namespace EnglishLearner
                 {
                     try
                     {
-                        TrieAction(sentence);
+                        Phrase whatPhrase = new Phrase(Console.ReadLine(), sqlTransposed);
+                        TrieAction(whatPhrase);
                         //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
                     }
                     catch (Exception e)
@@ -127,18 +128,29 @@ namespace EnglishLearner
                             while (wantToContinue)
                             {
                                 Console.WriteLine("Please provide for me a full sentence to learn from. End punctuation is not required, but it can help!\n");
-                                TrieAction(Console.ReadLine());
+                                Phrase whatPhrase = new Phrase(Console.ReadLine(), sqlTransposed);
 
-                                Console.WriteLine("Would you like to provide another sentence? y/n\n");
-
-                                while (!Console.ReadKey().KeyChar.Equals("y") || 
-                                       !Console.ReadKey().KeyChar.Equals("Y") || 
-                                       !Console.ReadKey().KeyChar.Equals("n") || 
-                                       !Console.ReadKey().KeyChar.Equals("N"))
+                                if (IsSentenceCorrect(whatPhrase))
                                 {
-                                    Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
-                                } // while
-                            }
+                                    TrieAction(whatPhrase);
+
+                                    Console.WriteLine("Would you like to provide another sentence? y/n\n");
+
+                                    char[] validYes = new char[] { 'y', 'Y' };
+                                    char[] validNo = new char[] { 'n', 'N' };
+
+                                    var userIn = Console.ReadKey().KeyChar;
+                                    while (!validYes.Contains(userIn) || !validNo.Contains(userIn))
+                                    {
+                                        Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
+                                    }
+
+                                    if (validNo.Contains(userIn))
+                                    {
+                                        break;
+                                    }
+                                } // if; else
+                            } // while continuing
 
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
@@ -160,7 +172,7 @@ namespace EnglishLearner
                                     // TODO: --1-- currently hardcoded only to fix sentences, not to revise them later. might need the DFS_Find() with the linked list for that one instead
                                     while (kvpPhrase.Value.SentencePattern.Contains("?")) 
                                     {
-                                        LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, kvpPhrase.Value);
+                                        LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, kvpPhrase.Value); // TODO: --3-- might need a null check for this in the future
 
                                         Console.WriteLine("\nHere is a sentence that has some unknowns. Can you correct them?\n");
                                         PrintPhraseInfo(lln);
@@ -222,7 +234,7 @@ namespace EnglishLearner
                                                         }
                                                         tNode.WordType = typeGiven;
                                                         FindNode fnLookup = new FindNode(kvpPhrase.Value, tNode);
-                                                        trieDict[key].Update_Node(fnLookup, "Node");
+                                                        trieDict[key].Update_Node(fnLookup);
                                                         findingNode = false;
                                                         updateHappened = true;
                                                     } // else
@@ -249,7 +261,7 @@ namespace EnglishLearner
                                                 {
                                                     //trieDict[key].DictOfPhrases[PhraseDictKey].SentencePattern[indexUpdated] = typeGiven;
                                                     tempPhrase = null;
-                                                }
+                                                }                                                                                                                                                                                                                                                                                   
                                             }
                                             //trieDict[key].DictOfPhrases[kvpPhrase.Key].SentencePattern[indexUpdated] = typeGiven;
 
@@ -263,16 +275,38 @@ namespace EnglishLearner
                                 } // foreach
                                 UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             } // foreach; trieDict key
-                            Console.WriteLine("All indexes updated!\n");
+                            Console.WriteLine("All indexes are up to date!\n");
+                            UniversalFunctions.LogToFile("All indexes are up to date!");
                             break;
                         case '3':
                             Console.Write("Hey lets chat! You start.\n");
                             bool doneTalking = false;
                             while (!doneTalking)
                             {
-                                // TODO: --1-- should hanlde the removing/deleting of a word before implementing
-                                TrieAction(Console.ReadLine());
-                            }
+                                string userSentence = Console.ReadLine();
+                                Phrase whatPhrase = new Phrase(userSentence, sqlTransposed);
+                                if (userSentence.Equals("--exit"))
+                                {
+                                    break;
+                                }
+                                else if (IsSentenceCorrect(whatPhrase))
+                                {
+                                    TrieAction(whatPhrase);
+                                    var lln = Trie.Get_Sentence_As_LinkedList(trieDict, whatPhrase); // should be right at the end so we can do the next check
+
+                                    if (lln.Value.KnownResponses.Count > 0)
+                                    {
+                                        // TODO: --1-- pick a response. Randomly or contextually? idk...
+                                        // TODO: spit out a sentence and use command --fix to then tell it certain words are incorrect
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Hmm, I don't know what to say to that. Can you teach me what I could reply with?");
+                                        // TODO: --1-- get response then store that in the known response for the node
+                                    }
+                                    // TODO: --1-- for a random response, we'd need a BFS search to look for word types and then traverse accordingly until we get a matching sentence pattern. return it as a sentence, and then create a new phrase for generation
+                                } // if; else
+                            } // while not done talking
                             
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
@@ -291,6 +325,24 @@ namespace EnglishLearner
                 }
             } // while; main menu
         } // function Run;
+
+        private bool IsSentenceCorrect(Phrase whatPhrase)
+        {
+            List<bool> wordTypeUnknown = new List<bool>();
+            foreach (string zPatternItem in whatPhrase.SentencePattern)
+            {
+                if (zPatternItem.Equals("?")) { wordTypeUnknown.Add(true); }
+                else { wordTypeUnknown.Add(false); }
+            }
+
+            if (!wordTypeUnknown.Contains(false) && wordTypeUnknown.Count > 3)
+            {
+                Console.WriteLine("I don't think even I can understand that! Sentence has been logged in case there is an error in my skills :)\n");
+                UniversalFunctions.LogToFile(whatPhrase.Sentence);
+                return false;
+            }
+            return true;
+        }
 
         private void PrintPhraseInfo(LinkedListNode<TrieNode> list)
         {
@@ -369,15 +421,14 @@ namespace EnglishLearner
             }
         }
 
-        private void TrieAction(string sentence)
+        private void TrieAction(Phrase zPhrase)
         {
             try
             {
-                if (sentence.Length > 1)
+                if (zPhrase.Sentence_NoPunctuation.Length > 1)
                 {
-                    var nsp = new Phrase(sentence, this.sqlTransposed);
                     Trie trieRoot;
-                    this.trieDict.TryGetValue(nsp.First_Word, out trieRoot);
+                    this.trieDict.TryGetValue(zPhrase.First_Word, out trieRoot);
 
                     /*
                      * TODO: --1-- to merge trie stuff
@@ -388,11 +439,11 @@ namespace EnglishLearner
 
                     if (trieRoot != null)
                     {
-                        this.trieDict[nsp.First_Word].Append(nsp);
+                        this.trieDict[zPhrase.First_Word].Append(zPhrase);
                     } // if
                     else
                     {
-                        this.trieDict.Add(nsp.First_Word, new Trie(nsp));
+                        this.trieDict.Add(zPhrase.First_Word, new Trie(zPhrase));
                     } // else
                 } // if; sentence length > 1
             } // try

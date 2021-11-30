@@ -51,6 +51,7 @@ namespace EnglishLearner
             {
                 Current.CanBeLastWord = true;
                 Current.TypesOfPunctuation += currentPhrase.Punctuation;
+                Current.KnownResponses = new List<string>();
             }
         } // Constructor
 
@@ -91,6 +92,7 @@ namespace EnglishLearner
                     {
                         Current.CanBeLastWord = true;
                         Current.TypesOfPunctuation += (Current.TypesOfPunctuation.Contains(currentPhrase.Punctuation) ? "" : currentPhrase.Punctuation);
+                        Current.KnownResponses = new List<string>();
                     }
 
 
@@ -130,7 +132,7 @@ namespace EnglishLearner
         /// </summary>
         /// <param name="fnNode"></param>
         /// <param name="updateWhat">Choice of "wordtype" or "node" and it will update accordingly</param>
-        public void Update_Node(FindNode fnNode, string updateWhat)
+        public void Update_Node(FindNode fnNode)
         {
             /*
             How to update a node in a trie
@@ -147,18 +149,11 @@ namespace EnglishLearner
                                      FindNode node = new FindNode(kvpPhrase.Value, lln.Value);
                                      trieDict[key].Update_Node(node, "node");
             */
+            DFS_Update_Node(fnNode, this.Root);
 
-            updateWhat = updateWhat.ToLower();
-            if (updateWhat.Equals("wordtype"))
-            {
-                DFS_Update_WordType(fnNode, this.Root);
-            }
-            else if (updateWhat.Equals("node"))
-            {
-                DFS_Update_Node(fnNode, this.Root);
-            }
         } // function Find
-
+/*
+ * TODO: --4-- hold onto for now but i don't know that i'll keep this
         private void DFS_Update_WordType(FindNode fnNode, TrieNode whichNode)
         {
             UniversalFunctions.LogToFile("DFS_FW called...");
@@ -172,7 +167,7 @@ namespace EnglishLearner
                 whichNode.WordType = fnNode.NodeMemberPayload.ToString();
             }
         } // function DFS_Find_Word
-
+*/
         private void DFS_Update_Node(FindNode fnNode, TrieNode whichNode)
         {
             UniversalFunctions.LogToFile("DFS_FW called...");
@@ -323,6 +318,7 @@ namespace EnglishLearner
         /// <returns>Returns a linked list containing the sentence, although from the tail of the LinkedList due to recursion. So remember, previous is actually the next word, next is the previous word.</returns>
         public static string Find_Sentence(Dictionary<string, Trie> trieDict)
         { // Returns the word and type association
+            // TODO: --1-- what is this?
             LinkedList<TrieNode> llSentence = new LinkedList<TrieNode>();
             LinkedListNode<TrieNode> lln = null;
 
@@ -358,8 +354,8 @@ namespace EnglishLearner
                             {
                                 lln.Value.SearchedPunctuation += punct;
 
-                                FindNode fnNode = new FindNode(tTest, lln.Value.NodeDepth, lln.Value);
-                                trieDict[key].Update_Node(fnNode, "Node");
+                                FindNode fnNode = new FindNode(tTest, lln.Value);
+                                trieDict[key].Update_Node(fnNode);
                                 rebuildSentence = temp;
                                 goto GotSentence; // we got one and we're done
                             }
@@ -376,12 +372,18 @@ namespace EnglishLearner
             LinkedList<TrieNode> llSentence = new LinkedList<TrieNode>();
             LinkedListNode<TrieNode> lln = null;
 
-            DFS_Find_Sentence_With_Phrase(llSentence, ref lln, trieDict[zPhrase.First_Word].Root, zPhrase);
-            if (llSentence.Count > 0)
+            Trie tempTrie = null;
+            trieDict.TryGetValue(zPhrase.First_Word, out tempTrie);
+
+            if (tempTrie != null)
             {
-                while (lln.Previous != null)
+                DFS_Find_Sentence_With_Phrase(llSentence, ref lln, tempTrie.Root, zPhrase);
+                if (llSentence.Count > 0)
                 {
-                    lln = lln.Previous;
+                    while (lln.Previous != null)
+                    {
+                        lln = lln.Previous;
+                    }
                 }
             }
 

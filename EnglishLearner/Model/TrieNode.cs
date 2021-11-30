@@ -22,6 +22,7 @@ namespace EnglishLearner
         public bool CanBeLastWord { get; set; }
         public string TypesOfPunctuation { get; set; }
         public string SearchedPunctuation { get; set; }
+        public List<string> KnownResponses { get; set; }
 
 
         public TrieNode(string word, int currentDepth, string wordTypeAsLetter)
@@ -34,6 +35,7 @@ namespace EnglishLearner
             this.CanBeLastWord = false;
             this.TypesOfPunctuation = ""; // blank by default
             this.SearchedPunctuation = "";
+            this.KnownResponses = null; // null by default unless initialized as an ending node
         } // set Child Node
     }
 }
