@@ -18,7 +18,7 @@ namespace EnglishLearner
     [Serializable]
     class Trie
     {
-        public Dictionary<string, Phrase> ListOfPhrases = new Dictionary<string, Phrase>();
+        public Dictionary<string, Phrase> DictOfPhrases = new Dictionary<string, Phrase>();
         public List<TrieNode> ListOfNodes = new List<TrieNode>();
         public int ChildNodeCount = 0;
         public TrieNode Root { get; private set; }
@@ -26,25 +26,24 @@ namespace EnglishLearner
         #region Trie Generation
         public Trie(Phrase currentPhrase)
         {
-            // TODO: --1-- consider making the end punctuation the keys for the dictionaryies. That way you'll always know what keys exist, and can easily retrieve the words and never have to be concerned with end punctuation as it's known at the top and can be ignored easily.
             UniversalFunctions.LogToFile("Trie Constructor called...");
 
-            this.ListOfPhrases.Add(currentPhrase.Sentence, currentPhrase);
+            this.DictOfPhrases.Add(currentPhrase.Sentence, currentPhrase);
             this.Root = new TrieNode(currentPhrase.First_Word, 0, currentPhrase.SentencePattern[0]);
             TrieNode Current = this.Root; // TODO: --4-- can most likely add the dictionary here instead of having it declared elsewhere
             TrieNode Next = null;
 
-            for (int i = 1; i < currentPhrase.SentencePattern.Length; i++)
+            for (int i = 1; i < currentPhrase.Split_Sentence.Length; i++)
             {
-                TrieNode newNode = new TrieNode(currentPhrase.SentencePattern[i], i, currentPhrase.SentencePattern[i]);
+                TrieNode newNode = new TrieNode(currentPhrase.Split_Sentence[i], i, currentPhrase.SentencePattern[i]);
                 Current.Children.Add(newNode.Word, newNode);
-                Current.Children.TryGetValue(currentPhrase.SentencePattern[i], out Next);
+                Current.Children.TryGetValue(currentPhrase.Split_Sentence[i], out Next);
                 this.ChildNodeCount++;
 
                 while (Next != null)
                 {
                     Current = Next;
-                    Current.Children.TryGetValue(currentPhrase.SentencePattern[i], out Next);
+                    Current.Children.TryGetValue(currentPhrase.Split_Sentence[i], out Next);
                 } // while
             } // for; word in a sentence
 
@@ -57,7 +56,7 @@ namespace EnglishLearner
 
         public void Append(Phrase currentPhrase)
         {
-            this.ListOfPhrases.Add(currentPhrase.Sentence, currentPhrase);
+            this.DictOfPhrases.Add(currentPhrase.Sentence, currentPhrase);
             DFS_Append(currentPhrase, this.Root);
         } // function Append
 
@@ -109,12 +108,6 @@ namespace EnglishLearner
 
         #region Breadth Search
 
-        private void BFS_FAI(string findThisWord, TrieNode whichNode)
-        {
-            // TODO: --1-- build this
-        }
-
-
         public void BFS_Find_Word(string findThisWord)
         {
             //DFS_FAI(findThisWord, this.Root);
@@ -136,9 +129,25 @@ namespace EnglishLearner
         /// Update a node by choosing the specific function
         /// </summary>
         /// <param name="fnNode"></param>
-        /// <param name="updateWhat"></param>
+        /// <param name="updateWhat">Choice of "wordtype" or "node" and it will update accordingly</param>
         public void Update_Node(FindNode fnNode, string updateWhat)
         {
+            /*
+            How to update a node in a trie
+
+                             foreach (string key in Trie)
+                             {
+                                 foreach (KeyValuePair<string, Phrase> kvpPhrase in PhraseDictionary) // for would be : trieDict[key].ListOfPhrases[i] 
+                                 { 
+                                     LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.Trie, kvpPhrase.Value);
+                                     while (lln.Next != null)
+                                     {
+                                        lln = lln.Next
+                                     }
+                                     FindNode node = new FindNode(kvpPhrase.Value, lln.Value);
+                                     trieDict[key].Update_Node(node, "node");
+            */
+
             updateWhat = updateWhat.ToLower();
             if (updateWhat.Equals("wordtype"))
             {
@@ -175,7 +184,7 @@ namespace EnglishLearner
             else
             { // update node
                 whichNode = fnNode.NodePayload;
-                this.ListOfPhrases[fnNode.Phrase.Sentence] = fnNode.Phrase;
+                this.DictOfPhrases[fnNode.Phrase.Sentence] = fnNode.Phrase;
             }
         } // function DFS_Find_Word
 
@@ -279,7 +288,7 @@ namespace EnglishLearner
             }
             else
             {
-                BFS_FAI(findThisWord, this.Root);
+                //BFS_FAI(findThisWord, this.Root);
             }
         }
 
@@ -320,7 +329,7 @@ namespace EnglishLearner
             string rebuildSentence = "";
             foreach (string key in trieDict.Keys)
             {
-                for (int i = 0; i < trieDict[key].ListOfPhrases.Count; i++)
+                for (int i = 0; i < trieDict[key].DictOfPhrases.Count; i++)
                 { // each phrase  
                     DFS_Find_Sentence(llSentence, ref lln, trieDict[key].Root);
                     if (llSentence.Count > 0)  
@@ -343,7 +352,7 @@ namespace EnglishLearner
                             temp += punct;
 
                             Phrase tTest = null;
-                            trieDict[key].ListOfPhrases.TryGetValue(temp, out tTest);
+                            trieDict[key].DictOfPhrases.TryGetValue(temp, out tTest);
 
                             if (tTest != null)
                             {

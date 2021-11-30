@@ -39,14 +39,7 @@ namespace EnglishLearner
                     .ToDictionary(x => x.Key, y => y.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().ToArray()); // Converts datatable into a Dictionary in the way you want it based on the column fields in the datatable
             } // Using Sqlite_Actions to get sql data but feed uniques into a dictionary
 
-            try
-            {
-                //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
-            }
-            catch (Exception e)
-            {
-                UniversalFunctions.LogToFile("Something went wrong loading the file...", e);
-            }
+
 
             if (trieDict.Count == 0)
             {
@@ -96,7 +89,15 @@ namespace EnglishLearner
 
                 foreach (string sentence in listOfSentences)
                 {
-                    TrieAction(sentence);
+                    try
+                    {
+                        TrieAction(sentence);
+                        //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
+                    }
+                    catch (Exception e)
+                    {
+                        UniversalFunctions.LogToFile("Something went wrong loading the file...", e);
+                    }
                 } // foreach
 
                 UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
@@ -148,30 +149,19 @@ namespace EnglishLearner
                             // TODO: --2-- i kinda hate this but i'm running out of time so this is just gonna have to do...do it functionally returning trues/falses
                             foreach (string key in trieDict.Keys)
                             {
-                                foreach (KeyValuePair<string, Phrase> kvpPhrase in trieDict[key].ListOfPhrases) // for would be : trieDict[key].ListOfPhrases[i] 
+                                // TODO: --3-- very bad however i'm pressed for time...
+                                CheckPhrasesAgain:
+                                bool updateHappened = false;
+                                int indexUpdated = 0;
+                                string typeGiven = "";
+
+                                foreach (KeyValuePair<string, Phrase> kvpPhrase in trieDict[key].DictOfPhrases)
                                 { // Each Phrase
-
-                                    //TODO: --1-- need to revise this because i'm doing it with a linked list now instead of the stupid way i was doing before
-                                    LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, kvpPhrase.Value);
-                                    var temp = lln;
-                                    List<bool> anyQuestionMarks = new List<bool>();
-                                    while (temp != null)
-                                    {
-                                        if (!temp.Value.WordType.Contains("?"))
-                                        {
-                                            anyQuestionMarks.Add(false);
-                                            temp = temp.Next;
-                                        }
-                                    }
-
-
-                                    bool updateHappened = false;
-                                    int indexUpdated = 0;
-                                    string typeGiven = "";
-
                                     // TODO: --1-- currently hardcoded only to fix sentences, not to revise them later. might need the DFS_Find() with the linked list for that one instead
                                     while (kvpPhrase.Value.SentencePattern.Contains("?")) 
                                     {
+                                        LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, kvpPhrase.Value);
+
                                         Console.WriteLine("\nHere is a sentence that has some unknowns. Can you correct them?\n");
                                         PrintPhraseInfo(lln);
                                         try
@@ -210,6 +200,7 @@ namespace EnglishLearner
                                                     }
                                                     else if (typeGiven.ToLower().Equals("--exit"))
                                                     {
+                                                        UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                                                         goto MainMenu;
                                                     }
                                                     else if (!wordTypes.Contains(typeGiven))
@@ -217,25 +208,25 @@ namespace EnglishLearner
                                                         Console.WriteLine("Not a valid input. Please use --help to see valid TYPE keys.\n");
                                                     }
                                                     else
-                                                    {
-                                                        var tmplocalLinkedList = lln;
-                                                        TrieNode tnNode = null;
-                                                        while (tmplocalLinkedList != null)
+                                                    { // replace and update node
+                                                        var temp_lln = lln;
+                                                        TrieNode tNode = null;
+                                                        while (temp_lln != null)
                                                         {
-                                                            if (tmplocalLinkedList.Value.NodeDepth == indexUpdated)
+                                                            if (temp_lln.Value.NodeDepth == indexUpdated)
                                                             {
-                                                                tnNode = tmplocalLinkedList.Value;
+                                                                tNode = temp_lln.Value;
                                                                 break;
                                                             }
-                                                            tmplocalLinkedList = tmplocalLinkedList.Next;
+                                                            temp_lln = temp_lln.Next;
                                                         }
-                                                        tnNode.WordType = typeGiven;
-                                                        FindNode fnLookup = new FindNode(kvpPhrase.Value, tnNode);
+                                                        tNode.WordType = typeGiven;
+                                                        FindNode fnLookup = new FindNode(kvpPhrase.Value, tNode);
                                                         trieDict[key].Update_Node(fnLookup, "Node");
                                                         findingNode = false;
                                                         updateHappened = true;
                                                     } // else
-                                                } // while
+                                                } // while finding the node
                                             } // if
                                         } // try
                                         catch (Exception e)
@@ -245,14 +236,28 @@ namespace EnglishLearner
                                         } // catch
 
                                         if (updateHappened && indexUpdated != -1)
-                                        { // Updates the trie
-                                            trieDict[key].ListOfPhrases[kvpPhrase.Key].SentencePattern[indexUpdated] = typeGiven;
-                                            kvpPhrase.Value.SentencePattern[indexUpdated] = typeGiven;
+                                        { // Updates the DictOfPhrases
+                                            string[] tempPunct = new string[] { ".", "?", "!" };
+                                            Phrase tempPhrase = null;
+
+                                            foreach (string punctuation in tempPunct)
+                                            { // checks to update all sentences in the dictionary if they have multiple punctuations
+                                                var PhraseDictKey = kvpPhrase.Value.Sentence_NoPunctuation + punctuation;
+                                                trieDict[key].DictOfPhrases.TryGetValue(PhraseDictKey, out tempPhrase);
+
+                                                if (tempPhrase != null)
+                                                {
+                                                    //trieDict[key].DictOfPhrases[PhraseDictKey].SentencePattern[indexUpdated] = typeGiven;
+                                                    tempPhrase = null;
+                                                }
+                                            }
+                                            //trieDict[key].DictOfPhrases[kvpPhrase.Key].SentencePattern[indexUpdated] = typeGiven;
 
                                             // Resets data
                                             updateHappened = false;
                                             indexUpdated = -1;
                                             typeGiven = "";
+                                            goto CheckPhrasesAgain; // TODO: --3-- need to cheat for now since i'm short on time
                                         }
                                     } // while
                                 } // foreach
@@ -261,13 +266,12 @@ namespace EnglishLearner
                             Console.WriteLine("All indexes updated!\n");
                             break;
                         case '3':
-                            Console.Write("Hey lets chat!\n");
+                            Console.Write("Hey lets chat! You start.\n");
                             bool doneTalking = false;
                             while (!doneTalking)
                             {
                                 // TODO: --1-- should hanlde the removing/deleting of a word before implementing
                                 TrieAction(Console.ReadLine());
-                                //var reply = trieDict[]
                             }
                             
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
@@ -329,7 +333,7 @@ namespace EnglishLearner
         {
             foreach (KeyValuePair<string, Trie> xTries in otherSave)
             {
-                foreach (KeyValuePair<string, Phrase> kvpPhrase in otherSave[xTries.Key].ListOfPhrases)
+                foreach (KeyValuePair<string, Phrase> kvpPhrase in otherSave[xTries.Key].DictOfPhrases)
                 {
                     TrieAction(this.trieDict, kvpPhrase.Value);
                 }
@@ -346,15 +350,17 @@ namespace EnglishLearner
             try
             {
                 Trie trieRoot;
-                this.trieDict.TryGetValue(zPhrase.First_Word, out trieRoot);
+                primaryTrie.TryGetValue(zPhrase.First_Word, out trieRoot);
+                //this.trieDict.TryGetValue(zPhrase.First_Word, out trieRoot);
 
                 if (trieRoot != null)
                 {
-                    this.trieDict[zPhrase.First_Word].Append(zPhrase);
+                    //this.primaryTrie[zPhrase.First_Word].Append(zPhrase);
                 } // if
                 else
                 {
-                    this.trieDict.Add(zPhrase.First_Word, new Trie(zPhrase));
+                    primaryTrie.Add(zPhrase.First_Word, new Trie(zPhrase));
+                    //this.trieDict.Add(zPhrase.First_Word, new Trie(zPhrase));
                 } // else
             } // try
             catch (Exception e)

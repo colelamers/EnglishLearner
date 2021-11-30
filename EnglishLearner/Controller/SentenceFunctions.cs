@@ -332,7 +332,7 @@ namespace EnglishLearner
                     }
                     else if (pronouns.Contains(lln.Value.CurrentWord.ToLower()))
                     { // is pronoun
-                        sentencePattern[patternIndex] = "N"; // TODO: --1-- consider changing this to be something different
+                        sentencePattern[patternIndex] = "N"; // TODO: --1-- consider changing this to be pronoun not noun?
                         goto WeContinued;
                     }
                     else if (prepositions.Contains(lln.Value.CurrentWord.ToLower()))
