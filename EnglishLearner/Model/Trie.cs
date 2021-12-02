@@ -18,7 +18,8 @@ namespace EnglishLearner
     [Serializable]
     class Trie
     {
-        public Dictionary<string, Phrase> DictOfPhrases = new Dictionary<string, Phrase>();
+        //public Dictionary<string, Phrase> DictOfPhrases = new Dictionary<string, Phrase>();
+        public List<string[]> ListOfSentenceArrays = new List<string[]>();
         public List<TrieNode> ListOfNodes = new List<TrieNode>();
         public int ChildNodeCount = 0;
         public TrieNode Root { get; private set; }
@@ -28,7 +29,7 @@ namespace EnglishLearner
         {
             UniversalFunctions.LogToFile("Trie Constructor called...");
 
-            this.DictOfPhrases.Add(currentPhrase.Sentence, currentPhrase);
+            this.ListOfSentenceArrays.Add(currentPhrase.Split_Sentence);
             this.Root = new TrieNode(currentPhrase.First_Word, 0, currentPhrase.SentencePattern[0]);
             TrieNode Current = this.Root; // TODO: --4-- can most likely add the dictionary here instead of having it declared elsewhere
             TrieNode Next = null;
@@ -51,13 +52,13 @@ namespace EnglishLearner
             {
                 Current.CanBeLastWord = true;
                 Current.TypesOfPunctuation += currentPhrase.Punctuation;
-                Current.KnownResponses = new List<string>();
+                Current.KnownResponses = new List<Phrase>();
             }
         } // Constructor
 
         public void Append(Phrase currentPhrase)
         {
-            this.DictOfPhrases.Add(currentPhrase.Sentence, currentPhrase);
+            this.ListOfSentenceArrays.Add(currentPhrase.Split_Sentence);
             DFS_Append(currentPhrase, this.Root);
         } // function Append
 
@@ -92,7 +93,7 @@ namespace EnglishLearner
                     {
                         Current.CanBeLastWord = true;
                         Current.TypesOfPunctuation += (Current.TypesOfPunctuation.Contains(currentPhrase.Punctuation) ? "" : currentPhrase.Punctuation);
-                        Current.KnownResponses = new List<string>();
+                        Current.KnownResponses = new List<Phrase>();
                     }
 
 
@@ -110,11 +111,6 @@ namespace EnglishLearner
 
         #region Breadth Search
 
-        public void BFS_Find_Word(string findThisWord)
-        {
-            //DFS_FAI(findThisWord, this.Root);
-        } // function Find
-
         private void BFS_FW(string findThisWord, TrieNode whichNode)
         {
             UniversalFunctions.LogToFile("BFS_FW called...");
@@ -127,6 +123,22 @@ namespace EnglishLearner
 
         #region Depth Search
 
+        /*
+How to update a node in a trie
+
+                 foreach (string key in Trie)
+                 {
+                     foreach (KeyValuePair<string, Phrase> kvpPhrase in PhraseDictionary) // for would be : trieDict[key].ListOfPhrases[i] 
+                     { 
+                         LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.Trie, kvpPhrase.Value);
+                         while (lln.Next != null)
+                         {
+                            lln = lln.Next
+                         }
+                         FindNode node = new FindNode(kvpPhrase.Value, lln.Value);
+                         trieDict[key].Update_Node(node, "node");
+*/
+
         /// <summary>
         /// Update a node by choosing the specific function
         /// </summary>
@@ -134,52 +146,35 @@ namespace EnglishLearner
         /// <param name="updateWhat">Choice of "wordtype" or "node" and it will update accordingly</param>
         public void Update_Node(FindNode fnNode)
         {
-            /*
-            How to update a node in a trie
-
-                             foreach (string key in Trie)
-                             {
-                                 foreach (KeyValuePair<string, Phrase> kvpPhrase in PhraseDictionary) // for would be : trieDict[key].ListOfPhrases[i] 
-                                 { 
-                                     LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.Trie, kvpPhrase.Value);
-                                     while (lln.Next != null)
-                                     {
-                                        lln = lln.Next
-                                     }
-                                     FindNode node = new FindNode(kvpPhrase.Value, lln.Value);
-                                     trieDict[key].Update_Node(node, "node");
-            */
             DFS_Update_Node(fnNode, this.Root);
-
         } // function Find
-/*
- * TODO: --4-- hold onto for now but i don't know that i'll keep this
-        private void DFS_Update_WordType(FindNode fnNode, TrieNode whichNode)
-        {
-            UniversalFunctions.LogToFile("DFS_FW called...");
+        /*
+         * TODO: --4-- hold onto for now but i don't know that i'll keep this
+                private void DFS_Update_WordType(FindNode fnNode, TrieNode whichNode)
+                {
+                    UniversalFunctions.LogToFile("DFS_FW called...");
 
-            if (whichNode.NodeDepth < fnNode.Index && fnNode.Index != 0)
-            { // dive down
-                DFS_Update_WordType(fnNode, whichNode.Children[fnNode.Phrase.Split_Sentence[whichNode.NodeDepth + 1]]);
-            }
-            else
-            { // update node
-                whichNode.WordType = fnNode.NodeMemberPayload.ToString();
-            }
-        } // function DFS_Find_Word
-*/
+                    if (whichNode.NodeDepth < fnNode.Index && fnNode.Index != 0)
+                    { // dive down
+                        DFS_Update_WordType(fnNode, whichNode.Children[fnNode.Phrase.Split_Sentence[whichNode.NodeDepth + 1]]);
+                    }
+                    else
+                    { // update node
+                        whichNode.WordType = fnNode.NodeMemberPayload.ToString();
+                    }
+                } // function DFS_Find_Word
+        */
         private void DFS_Update_Node(FindNode fnNode, TrieNode whichNode)
         {
             UniversalFunctions.LogToFile("DFS_FW called...");
 
-            if (whichNode.NodeDepth < fnNode.Index && fnNode.Index != 0)
+            if (whichNode.NodeDepth < fnNode.NodePayload.NodeDepth && fnNode.NodePayload.NodeDepth != 0)
             { // dive down
-                DFS_Update_Node(fnNode, whichNode.Children[fnNode.Phrase.Split_Sentence[whichNode.NodeDepth + 1]]);
+                DFS_Update_Node(fnNode, whichNode.Children[fnNode.SentenceArray[whichNode.NodeDepth + 1]]);
             }
             else
             { // update node
                 whichNode = fnNode.NodePayload;
-                this.DictOfPhrases[fnNode.Phrase.Sentence] = fnNode.Phrase;
             }
         } // function DFS_Find_Word
 
@@ -251,21 +246,22 @@ namespace EnglishLearner
             } // else
         } // function DFS_Find_Sentence
 
-        private static void DFS_Find_Sentence_With_Phrase(LinkedList<TrieNode> llSentence, ref LinkedListNode<TrieNode> lln, TrieNode whichNode, Phrase zPhrase)
+        private static void DFS_Find_Sentence_With_SentenceArray(LinkedList<TrieNode> llSentence, ref LinkedListNode<TrieNode> lln, TrieNode whichNode, string[]  sentenceArray)
         { // The reason .RecentlyTouched is in here three times is because it can't be touched
           // until it commits to further recursion or ending it. Otherwise it will always be true.
             UniversalFunctions.LogToFile("DFS_Find_Sentence_With_Phrase called...");
  
-            if (whichNode.NodeDepth + 1 < zPhrase.Split_Sentence.Length)
+            if (whichNode.NodeDepth + 1 < sentenceArray.Length) // whichNode.NodeDepth + 1 = the first word after the root word initially passed in
             {
                 TrieNode Next = null;
                 if (whichNode.Children.Keys.Count > 0)
                 {
-                    whichNode.Children.TryGetValue(zPhrase.Split_Sentence[whichNode.NodeDepth + 1], out Next);
-                    DFS_Find_Sentence_With_Phrase(llSentence, ref lln, Next, zPhrase);
+                    whichNode.Children.TryGetValue(sentenceArray[whichNode.NodeDepth + 1], out Next);
+                    DFS_Find_Sentence_With_SentenceArray(llSentence, ref lln, Next, sentenceArray);
                 }
             }
 
+            whichNode.RecentlyTouched = true;
             lln = new LinkedListNode<TrieNode>(whichNode);
             llSentence.AddLast(lln);
         } // function DFS_Find_Sentence
@@ -301,7 +297,7 @@ namespace EnglishLearner
             } // foreach
         }
 
-        public static void Reset_Trie_Touches(Dictionary<string, Trie> trieDict, bool reset_trie)
+        public static void Reset_Trie_Touches(Dictionary<string, Trie> trieDict)
         {
             foreach (string key in trieDict.Keys)
             { // resets trie for searching
@@ -325,7 +321,7 @@ namespace EnglishLearner
             string rebuildSentence = "";
             foreach (string key in trieDict.Keys)
             {
-                for (int i = 0; i < trieDict[key].DictOfPhrases.Count; i++)
+                for (int i = 0; i < trieDict[key].ListOfSentenceArrays.Count; i++)
                 { // each phrase  
                     DFS_Find_Sentence(llSentence, ref lln, trieDict[key].Root);
                     if (llSentence.Count > 0)  
@@ -348,13 +344,14 @@ namespace EnglishLearner
                             temp += punct;
 
                             Phrase tTest = null;
-                            trieDict[key].DictOfPhrases.TryGetValue(temp, out tTest);
+                            // TODO: --3-- if i plan on using this again, you need to loop through the list unfortunately
+                            //trieDict[key].ListOfSentenceArrays.TryGetValue(temp, out tTest);
 
                             if (tTest != null)
                             {
                                 lln.Value.SearchedPunctuation += punct;
 
-                                FindNode fnNode = new FindNode(tTest, lln.Value);
+                                FindNode fnNode = new FindNode(tTest.Split_Sentence, lln.Value);
                                 trieDict[key].Update_Node(fnNode);
                                 rebuildSentence = temp;
                                 goto GotSentence; // we got one and we're done
@@ -367,17 +364,17 @@ namespace EnglishLearner
             return rebuildSentence;
         }
 
-        public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict, Phrase zPhrase)
+        public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict, string[] sentenceArray)
         { // Returns the word and type association
             LinkedList<TrieNode> llSentence = new LinkedList<TrieNode>();
             LinkedListNode<TrieNode> lln = null;
 
             Trie tempTrie = null;
-            trieDict.TryGetValue(zPhrase.First_Word, out tempTrie);
+            trieDict.TryGetValue(sentenceArray[0], out tempTrie);
 
             if (tempTrie != null)
             {
-                DFS_Find_Sentence_With_Phrase(llSentence, ref lln, tempTrie.Root, zPhrase);
+                DFS_Find_Sentence_With_SentenceArray(llSentence, ref lln, tempTrie.Root, sentenceArray);
                 if (llSentence.Count > 0)
                 {
                     while (lln.Previous != null)
@@ -389,38 +386,6 @@ namespace EnglishLearner
 
             return lln;
         } // function Get_Sentence_As_LinkedList
-
-        private void PrintPhraseInfo(Dictionary<string, Trie> xTrie, Phrase zPhrase)
-        { // TODO: --3-- maybe ditch this
-            int wordSpaceSizing = 0;
-
-            foreach (string word in zPhrase.Split_Sentence)
-            {
-                if (word.Length > wordSpaceSizing)
-                {
-                    wordSpaceSizing = word.Length;
-                }
-            } // foreach; gets the largest sized word to make pretty printing
-
-            Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
-
-            for (int i = 0; i < zPhrase.Split_Sentence.Length; i++)
-            {
-                Console.Write($"\t{i}\t|    ");
-
-                int differenceInLength = wordSpaceSizing - zPhrase.Split_Sentence[i].Length;
-                int tackOnExtra = differenceInLength % 2;
-                int evenSpaces = (differenceInLength - tackOnExtra) / 2;
-
-                for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                Console.Write(zPhrase.Split_Sentence[i]);
-                for (int j = 0; j < evenSpaces; j++) { Console.Write(" "); }
-                if (tackOnExtra > 0) { Console.Write(" "); }
-
-                Console.Write($"   |\t{zPhrase.SentencePattern[i]}\n");
-            } // for; calculates difference between max word size and current word size to print pretty
-        }
-
   
     } // Class Trie
 } // namespace

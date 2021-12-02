@@ -165,7 +165,7 @@ namespace EnglishLearner
         } // function Split_Paragraph
 
         // TODO: --3-- add a function that replaces & with "and" or + with "plus" or - with "minus" and things like that
-        public static (string[], string) GetSplitSentenceAndPunctuation(string sentence)
+        public static string[] GetSplitSentence(string sentence)
         {
             UniversalFunctions.LogToFile("GetSplitSentenceAndPunctuation called...");
             /*
@@ -193,10 +193,10 @@ namespace EnglishLearner
                 } // if; index is not null
             } // for; each word from the passed in string[]
 
-            return (sentenceAsArray, GetPunctuation(sentenceAsArray));
+            return sentenceAsArray;
         } // function GetSplitSentence
 
-        private static string GetPunctuation(string[] sentenceAsArray)
+        public static string GetPunctuation(string[] sentenceAsArray)
         {
             UniversalFunctions.LogToFile("GetPunctuation called...");
 

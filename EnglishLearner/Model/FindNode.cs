@@ -6,14 +6,12 @@ namespace EnglishLearner
 {
     class FindNode
     {
-        public Phrase Phrase { get; }
-        public int Index { get; }
+        public string[] SentenceArray { get; }
         public TrieNode NodePayload { get; set; }
 
-        public FindNode(Phrase t_Phrase, TrieNode t_WhatToUpdate)
+        public FindNode(string[] SentenceArray, TrieNode t_WhatToUpdate)
         {
-            this.Phrase = t_Phrase;
-            this.Index = t_WhatToUpdate.NodeDepth;
+            this.SentenceArray = SentenceArray;
             this.NodePayload = t_WhatToUpdate;
         }
     }

@@ -22,7 +22,7 @@ namespace EnglishLearner
         public bool CanBeLastWord { get; set; }
         public string TypesOfPunctuation { get; set; }
         public string SearchedPunctuation { get; set; }
-        public List<string> KnownResponses { get; set; }
+        public List<Phrase> KnownResponses { get; set; }
 
 
         public TrieNode(string word, int currentDepth, string wordTypeAsLetter)
