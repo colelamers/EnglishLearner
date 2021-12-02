@@ -20,9 +20,9 @@ namespace EnglishLearner
     {
         //public Dictionary<string, Phrase> DictOfPhrases = new Dictionary<string, Phrase>();
         public List<string[]> ListOfSentenceArrays = new List<string[]>();
-        public List<TrieNode> ListOfNodes = new List<TrieNode>();
-        public int ChildNodeCount = 0;
-        public TrieNode Root { get; private set; }
+        //public List<TrieNode> ListOfNodes = new List<TrieNode>();
+        public int MaxNodeLevel = 0;
+        public TrieNode Root { get; private set; } // TODO: --4-- when you get the chance, fix how this works. dictionary of tries or something should most definitely be here.
 
         #region Trie Generation
         public Trie(Phrase currentPhrase)
@@ -39,7 +39,6 @@ namespace EnglishLearner
                 TrieNode newNode = new TrieNode(currentPhrase.Split_Sentence[i], i, currentPhrase.SentencePattern[i]);
                 Current.Children.Add(newNode.Word, newNode);
                 Current.Children.TryGetValue(currentPhrase.Split_Sentence[i], out Next);
-                this.ChildNodeCount++;
 
                 while (Next != null)
                 {
@@ -53,6 +52,11 @@ namespace EnglishLearner
                 Current.CanBeLastWord = true;
                 Current.TypesOfPunctuation += currentPhrase.Punctuation;
                 Current.KnownResponses = new List<Phrase>();
+
+                if (this.MaxNodeLevel < Current.NodeDepth)
+                {
+                    this.MaxNodeLevel = Current.NodeDepth;
+                }
             }
         } // Constructor
 
@@ -67,7 +71,8 @@ namespace EnglishLearner
             if (currentPhrase.Split_Sentence.Length > Current.NodeDepth + 1)
             {
                 TrieNode Next = null;
-                Current.Children.TryGetValue(currentPhrase.Split_Sentence[Current.NodeDepth + 1], out Next); // TODO: --3-- can possibly eliminate the iterator by just using the NodeDepth. To catch for Root, you'd just have to do an if check that the NodeDepth > 0. If not, add a new root node.
+                Current.Children.TryGetValue(currentPhrase.Split_Sentence[Current.NodeDepth + 1], out Next);
+                // TODO: --2-- can combine this with the trie creation possibly?
 
                 if (Next != null)
                 { // recursively dive through Trie
@@ -80,7 +85,6 @@ namespace EnglishLearner
                         TrieNode newNode = new TrieNode(currentPhrase.Split_Sentence[i], i, currentPhrase.SentencePattern[i]);
                         Current.Children.Add(newNode.Word, newNode);
                         Next = Current.Children[newNode.Word];
-                        this.ChildNodeCount++;
 
                         while (Next != null)
                         {
@@ -90,15 +94,18 @@ namespace EnglishLearner
                     } // for; word in a currentPhrase.Split_Sentence
 
                     if (Next == null)
-                    {
+                    { // Final Node level updates
                         Current.CanBeLastWord = true;
                         Current.TypesOfPunctuation += (Current.TypesOfPunctuation.Contains(currentPhrase.Punctuation) ? "" : currentPhrase.Punctuation);
                         Current.KnownResponses = new List<Phrase>();
-                    }
 
-
+                        if (this.MaxNodeLevel < Current.NodeDepth)
+                        {
+                            this.MaxNodeLevel = Current.NodeDepth;
+                        }
+                    } // if
                 } // else; append Trie 
-            } // if; iterator == sentence word length, that means everything is a duplicate
+            } // if
             else if (Current.CanBeLastWord == true)
             { // adds another ending punctuation if the same sentence with a different ending punctuation comes up
                 Current.TypesOfPunctuation += (Current.TypesOfPunctuation.Contains(currentPhrase.Punctuation) ? "" : currentPhrase.Punctuation);
@@ -110,34 +117,59 @@ namespace EnglishLearner
         #endregion Trie Generation
 
         #region Breadth Search
+        public static void UpdateAllWords(Dictionary<string, Trie> trieDict, string wordToUpdate, string wordTypeToUpdate)
+        { // Due to the nature of how I have the trieDict set up, I have to do a DFS/BFS hybrid. DFS by Trie, but BFS by node. Hence the two foreach loops.
+            Reset_Trie_Touches(trieDict);
+            Queue<TrieNode> bfs_queue = new Queue<TrieNode>();
 
-        private void BFS_FW(string findThisWord, TrieNode whichNode)
+            foreach (string tKey in trieDict.Keys)
+            { // update all node level keys
+                if (tKey.Equals(wordToUpdate))
+                {
+                    trieDict[tKey].Root.WordType = wordTypeToUpdate;
+                }
+
+                bfs_queue.Enqueue(trieDict[tKey].Root);
+
+                while (bfs_queue.Count > 0)
+                {
+                    var dequed = bfs_queue.Dequeue();
+
+                    foreach (string childKey in dequed.Children.Keys)
+                    {
+                        if (dequed.Children[childKey].Word.Equals(wordToUpdate))
+                        {
+                            dequed.Children[childKey].WordType = wordTypeToUpdate.ToUpper();
+                        }
+                        bfs_queue.Enqueue(dequed.Children[childKey]);
+                    } // each Queue item
+                } // while
+            }
+        } // function Update All Words 
+
+        private static void BFS_UpdateAllWords(TrieNode whichNode, string wordToUpdate, string wordTypeToUpdate)
         {
-            UniversalFunctions.LogToFile("BFS_FW called...");
+            Queue<TrieNode> bfs_queue = new Queue<TrieNode>();
+            bfs_queue.Enqueue(whichNode);
 
-            this.ListOfNodes = new List<TrieNode>(); // empties it out and creates a new search value stored at the index
-            Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
+            while (bfs_queue.Count > 0)
+            {
+                var dequed = bfs_queue.Dequeue();
+
+                foreach (string childKey in dequed.Children.Keys)
+                { // Update all child nodes at the key
+                    if (dequed.Children[childKey].Word.Equals(wordToUpdate))
+                    {
+                        dequed.Children[childKey].WordType = wordTypeToUpdate;
+                    }
+                    bfs_queue.Enqueue(dequed.Children[childKey]);
+                }
+            }
         }
 
         #endregion Breadth Search
 
         #region Depth Search
-
-        /*
-How to update a node in a trie
-
-                 foreach (string key in Trie)
-                 {
-                     foreach (KeyValuePair<string, Phrase> kvpPhrase in PhraseDictionary) // for would be : trieDict[key].ListOfPhrases[i] 
-                     { 
-                         LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.Trie, kvpPhrase.Value);
-                         while (lln.Next != null)
-                         {
-                            lln = lln.Next
-                         }
-                         FindNode node = new FindNode(kvpPhrase.Value, lln.Value);
-                         trieDict[key].Update_Node(node, "node");
-*/
 
         /// <summary>
         /// Update a node by choosing the specific function
@@ -178,11 +210,10 @@ How to update a node in a trie
             }
         } // function DFS_Find_Word
 
-        private void DFS_Find_All_Word_Instances(string findThisWord, TrieNode whichNode)
+        private void DFS_Find_All_Word_Instances(string findThisWord, ref List<TrieNode> listOfNodes, TrieNode whichNode)
         {
             UniversalFunctions.LogToFile("DFS_FAI called...");
 
-            this.ListOfNodes = new List<TrieNode>(); // empties it out and creates a new search value stored at the index
             Dictionary<string, TrieNode>.KeyCollection nodeKeys = whichNode.Children.Keys;
             TrieNode Next = null;
 
@@ -194,9 +225,9 @@ How to update a node in a trie
                 {
                     if (whichNode.Children[key].Word.Equals(findThisWord) || whichNode.Children[key].Word.Contains(findThisWord))
                     {
-                        this.ListOfNodes.Add(whichNode.Children[key]);
+                        listOfNodes.Add(whichNode.Children[key]);
                     } // if; node equals or contains the word
-                    DFS_Find_All_Word_Instances(findThisWord, Next);
+                    DFS_Find_All_Word_Instances(findThisWord, ref listOfNodes, Next);
                     // TODO: --3-- add a delegate function in here? that way if we want to, we can pass in different tasks like "Print everything" or "Find all of these words" or "find the first instance of this word" or "get the height of this word"
                 } // if; next is not null
             } // foreach; key
@@ -270,17 +301,19 @@ How to update a node in a trie
 
         // TODO: --1-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
 
-        public void Find_All_Instances(string findThisWord, bool dfs_default = true)
+        public List<TrieNode> Find_All_Instances(string findThisWord, bool dfs_default = true)
         {
+            List<TrieNode> listOfNodes = new List<TrieNode>();
             // TODO: --3-- idk what todo but this isn't done
             if (dfs_default)
             {
-                DFS_Find_All_Word_Instances(findThisWord, this.Root);
+                DFS_Find_All_Word_Instances(findThisWord, ref listOfNodes, this.Root);
             }
             else
             {
                 //BFS_FAI(findThisWord, this.Root);
             }
+            return listOfNodes;
         }
 
         private static void ResetTrieTouchedValues(TrieNode whichNode)
@@ -297,6 +330,10 @@ How to update a node in a trie
             } // foreach
         }
 
+        /// <summary>
+        /// Resets all touched values to false via DFS. USE THIS ONE FOR RESETTING!
+        /// </summary>
+        /// <param name="trieDict"></param>
         public static void Reset_Trie_Touches(Dictionary<string, Trie> trieDict)
         {
             foreach (string key in trieDict.Keys)
@@ -305,6 +342,7 @@ How to update a node in a trie
             }
         } // function Reset_Trie_Touches
 
+/*
         /// <summary>
         /// Finds a new sentence that hasn't been touched recently.
         /// </summary>
@@ -363,7 +401,7 @@ How to update a node in a trie
             GotSentence:
             return rebuildSentence;
         }
-
+*/
         public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict, string[] sentenceArray)
         { // Returns the word and type association
             LinkedList<TrieNode> llSentence = new LinkedList<TrieNode>();

@@ -112,6 +112,7 @@ namespace EnglishLearner
             bool interact = true;
             while (interact)
             {
+                Trie.UpdateAllWords(this.trieDict, "agree", "p");
                 MainMenu:
                 UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
 
@@ -161,10 +162,10 @@ namespace EnglishLearner
                             string[] wordTypes = new string[] { "A", "C", "D", "J", "N", "P", "V" };
 
                             // TODO: --2-- i kinda hate this but i'm running out of time so this is just gonna have to do...do it functionally returning trues/falses
-                            foreach (string key in trieDict.Keys)
+                            foreach (string key in this.trieDict.Keys)
                             {
                                 int i = 0;
-                                while (i < trieDict[key].ListOfSentenceArrays.Count)
+                                while (i < this.trieDict[key].ListOfSentenceArrays.Count)
                                 { // foreach sentence, incrementing is based on if there are no "?" in the sentence
                                     LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, trieDict[key].ListOfSentenceArrays[i]); // TODO: --3-- might need a null check for this in the future
                                     var temp = lln;
@@ -245,8 +246,8 @@ namespace EnglishLearner
                                                         temp_lln = temp_lln.Next;
                                                     }
                                                     tNode.WordType = typeGiven;
-                                                    FindNode fnLookup = new FindNode(trieDict[key].ListOfSentenceArrays[i], tNode);
-                                                    trieDict[key].Update_Node(fnLookup);
+                                                    FindNode fnLookup = new FindNode(this.trieDict[key].ListOfSentenceArrays[i], tNode);
+                                                    this.trieDict[key].Update_Node(fnLookup);
                                                 } // else
                                             } // while finding the node
                                         } // if
@@ -260,96 +261,6 @@ namespace EnglishLearner
                                 } // for each array item
                             }
                             break;
-/*
-
-                                LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, kvpPhrase.Value); // TODO: --3-- might need a null check for this in the future
-
-                                Console.WriteLine("\nHere is a sentence that has some unknowns. Can you correct them?\n");
-                                PrintPhraseInfo(lln);
-                                try
-                                {
-                                    Console.WriteLine("What index to correct?");
-                                    string decision = Console.ReadLine();
-
-                                    if (decision.ToLower().Equals("--exit"))
-                                    { // checks in case the user wishes to exit prematurely
-                                        goto MainMenu;
-                                    }
-                                    else if (decision.Equals("--skip"))
-                                    { // skips to the next iteration
-                                        continue;
-                                    }
-                                    else if (decision.ToLower().Equals("--help"))
-                                    {
-                                        Console.WriteLine("\n\tHelp: Select the index number of the word you wish to correct.\n");
-                                    }
-                                    else if (decision.ToLower().Equals("--print"))
-                                    {
-                                        PrintPhraseInfo(lln);
-                                    }
-                                    else if (int.TryParse(decision, out indexUpdated))
-                                    { // find index
-                                        bool findingNode = true;
-                                        while (findingNode)
-                                        {
-                                            Console.WriteLine("What type should it be?");
-                                            string userin = Console.ReadLine();
-                                            typeGiven = userin.ToUpper();
-
-                                            if (typeGiven.ToLower().Equals("--help"))
-                                            {
-                                                Console.WriteLine("\n\tHelp: What type of word should this be?\nSentence Pattern:\nA: Definite article\nC: Conjugation\nD: Adverb\nJ: Adjective\nN: Noun\nP: Preposition\nV: Verb\n");
-                                            }
-                                            else if (typeGiven.ToLower().Equals("--exit"))
-                                            {
-                                                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
-                                                goto MainMenu;
-                                            }
-                                            else if (!wordTypes.Contains(typeGiven))
-                                            {
-                                                Console.WriteLine("Not a valid input. Please use --help to see valid TYPE keys.\n");
-                                            }
-                                            else
-                                            { // replace and update node
-                                                var temp_lln = lln;
-                                                TrieNode tNode = null;
-                                                while (temp_lln != null)
-                                                {
-                                                    if (temp_lln.Value.NodeDepth == indexUpdated)
-                                                    {
-                                                        tNode = temp_lln.Value;
-                                                        break;
-                                                    }
-                                                }
-                                                    temp_lln = temp_lln.Next;
-                                                tNode.WordType = typeGiven;
-                                                FindNode fnLookup = new FindNode(kvpPhrase.Value, tNode);
-                                                trieDict[key].Update_Node(fnLookup);
-                                                findingNode = false;
-                                                updateHappened = true;
-                                            } // else
-                                        } // while finding the node
-                                    } // if
-                                } // try
-                                catch (Exception e)
-                                {
-                                    Console.WriteLine("Something went wrong. Please see error log for details.\n");
-                                    UniversalFunctions.LogToFile("Main Menu Choice 2: Error", e);
-                                } // catch
-
-                                if (updateHappened && indexUpdated != -1)
-                                {
-                                    // Resets data
-                                    updateHappened = false;
-                                    indexUpdated = -1;
-                                    typeGiven = "";
-                                    goto CheckPhrasesAgain; // TODO: --3-- need to cheat for now since i'm short on time
-                                }
-                                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
-                            } // foreach; trieDict key
-                            Console.WriteLine("All indexes are up to date!\n");
-                            UniversalFunctions.LogToFile("All indexes are up to date!");
-                            break;*/
                         case '3':
                             Console.Write("Hey lets chat! You start.\n");
                             bool doneTalking = false;
