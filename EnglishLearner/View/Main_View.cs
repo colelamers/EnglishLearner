@@ -25,7 +25,7 @@ namespace EnglishLearner
         private Configuration _config = null;
         private Dictionary<string, Trie> trieDict = new Dictionary<string, Trie>(); // TODO: --3-- this may need to be stored in a brain class
         private Dictionary<string, string[]> sqlTransposed = new Dictionary<string, string[]>();
-        private Dictionary<string, TrieNode> correctedNodes = new Dictionary<string, TrieNode>(); // my cheating way to take care of nodes that get fixed. we just consult this and fix any new ones generated.
+        private Dictionary<string, TrieNode> correctedNodes = new Dictionary<string, TrieNode>(); // TODO: --4-- my cheating way to take care of nodes that get fixed. we just consult this and fix any new ones generated.
 
         private void Run()
         {
@@ -70,32 +70,8 @@ namespace EnglishLearner
                                 if (IsSentenceCorrect(whatPhrase))
                                 {
                                     TrieAction(whatPhrase);
+                                    wantToContinue = yesOrNo("Would you like to provide another sentence? y/n\n");
 
-                                    Console.WriteLine("Would you like to provide another sentence? y/n\n");
-
-                                    char[] validYes = new char[] { 'y', 'Y' };
-                                    char[] validNo = new char[] { 'n', 'N' };
-
-                                    var userIn = Console.ReadKey().KeyChar;
-                                    while (true)
-                                    {
-                                        if (validNo.Contains(userIn))
-                                        {
-                                            wantToContinue = false;
-                                            break;
-                                        }
-                                        else if (validYes.Contains(userIn))
-                                        {
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
-                                            userIn = Console.ReadKey().KeyChar;
-                                        }
-                                    }
-
-   
                                 } // if; else
                             } // while continuing
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
@@ -244,11 +220,24 @@ namespace EnglishLearner
                                                 Console.Write("Random Response: ");
                                                 var randomSentence = Trie.ReturnRandomSentenceFromPattern(this.trieDict, string.Join("", whatPhrase.SentencePattern).ToCharArray()); // update all words means we don't have to just update the singular node
 
+                                                Console.WriteLine(randomSentence + "\n");
+                                                if(yesOrNo("Was that sentence any good?\n"))
+                                                {
+                                                    Console.WriteLine("\nNice! I'll remember that one.\n");
+                                                    AddKnownResponse(randomSentence, lln);
+                                                }
+                                                else
+                                                {
+                                                    Console.WriteLine("\nWow...English is not an easy language!\n");
+                                                    AddIllegalResponse(randomSentence, lln);
+                                                }
+
+                                                Console.WriteLine("\nHe're is a sentence I do know how to respond with!\n");
                                                 Console.WriteLine(lln.Value.Legal_KnownResponses[rngNumber].Sentence + "\n");
 
                                                 Console.WriteLine("\nCan you teach me another way to respond?\n");
                                                 string responseSentence = Console.ReadLine();
-                                                if (responseSentence.Equals("--exit"))
+                                                if (responseSentence.Equals("\n--exit\n"))
                                                 {
                                                     doneTalking = false;
                                                     break;
@@ -257,14 +246,25 @@ namespace EnglishLearner
                                             }
                                             else
                                             {
-                                                Console.Write("Random Response: ");
-                                                var randomSentence = Trie.ReturnRandomSentenceFromPattern(this.trieDict, "NVNCN".ToCharArray()); // update all words means we don't have to just update the 
+                                                Console.Write("\nRandom Response: \n");
+                                                var randomSentence = Trie.ReturnRandomSentenceFromPattern(this.trieDict, string.Join("", whatPhrase.SentencePattern).ToCharArray()); // update all words means we don't have to just update the 
                                                 Console.WriteLine(randomSentence);
+
+                                                if (yesOrNo("Was that sentence any good?"))
+                                                {
+                                                    Console.WriteLine("Nice! I'll remember that one.\n");
+                                                    AddKnownResponse(randomSentence, lln);
+                                                }
+                                                else
+                                                {
+                                                    Console.WriteLine("Wow...English is not an easy language!\n");
+                                                    AddIllegalResponse(randomSentence, lln);
+                                                }
+
                                                 Console.WriteLine("\nHmm, I don't know what to say to that. Can you teach me what I could reply with?\n");
                                                 string responseSentence = Console.ReadLine();
                                                 AddKnownResponse(responseSentence, lln);
                                             }
-                                            // TODO: --1-- for a random response, we'd need a BFS search to look for word types and then traverse accordingly until we get a matching sentence pattern. return it as a sentence, and then create a new phrase for generation
                                         } // if
 
                                     } // if; else
@@ -292,6 +292,40 @@ namespace EnglishLearner
             } // while; main menu
             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
         } // function Run;
+
+        /// <summary>
+        /// True = yes, False = no;
+        /// </summary>
+        /// <param name="consoleOutput"></param>
+        /// <returns></returns>
+        private bool yesOrNo(string consoleOutput)
+        {
+            Console.WriteLine(consoleOutput);
+
+            char[] validYes = new char[] { 'y', 'Y' };
+            char[] validNo = new char[] { 'n', 'N' };
+            bool wantToContinue = true;
+
+            var userIn = Console.ReadKey().KeyChar;
+            while (wantToContinue)
+            {
+                if (validNo.Contains(userIn))
+                {
+                    wantToContinue = false;
+                    break;
+                }
+                else if (validYes.Contains(userIn))
+                {
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
+                    userIn = Console.ReadKey().KeyChar;
+                }
+            }
+            return wantToContinue; // basically only finishes when you don't want to continue
+        }
 
         private void AddKnownResponse(string createdSentence, LinkedListNode<TrieNode> lln)
         {

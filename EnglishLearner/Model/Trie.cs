@@ -19,7 +19,6 @@ namespace EnglishLearner
     [Serializable]
     class Trie
     {
-        public List<string[]> ListOfSentenceArrays = new List<string[]>();
         public int MaxNodeLevel = 0;
         public TrieNode Root { get; private set; } // TODO: --4-- fix how this works. Key should pull like a null or something and only child keys from that location. so nodedepth 0 shouldn't be anything
 
@@ -27,7 +26,6 @@ namespace EnglishLearner
         public Trie(Phrase currentPhrase)
         {
             UniversalFunctions.LogToFile("Trie Constructor called...");
-            this.ListOfSentenceArrays.Add(currentPhrase.Split_Sentence);
 
             this.Root = new TrieNode(currentPhrase.First_Word, 0, currentPhrase.SentencePattern[0]);
             TrieNode Current = this.Root; // TODO: --4-- can most likely add the dictionary here instead of having it declared elsewhere
@@ -50,7 +48,6 @@ namespace EnglishLearner
             {
                 Current.CanBeLastWord = true;
                 Current.TypesOfPunctuation += currentPhrase.Punctuation;
-                Current.Legal_KnownResponses = new List<Phrase>();
 
                 if (this.MaxNodeLevel < Current.NodeDepth)
                 {
@@ -61,7 +58,6 @@ namespace EnglishLearner
 
         public void Append(Phrase currentPhrase)
         {
-            this.ListOfSentenceArrays.Add(currentPhrase.Split_Sentence);
             DFS_Append(currentPhrase, this.Root);
         } // function Append
 
@@ -96,7 +92,6 @@ namespace EnglishLearner
                     { // Final Node level updates
                         Current.CanBeLastWord = true;
                         Current.TypesOfPunctuation += (Current.TypesOfPunctuation.Contains(currentPhrase.Punctuation) ? "" : currentPhrase.Punctuation);
-                        Current.Legal_KnownResponses = new List<Phrase>();
 
                         if (this.MaxNodeLevel < Current.NodeDepth)
                         {
@@ -227,7 +222,7 @@ namespace EnglishLearner
                         }
                     }
 
-                    //TODO: --1-- just need to fix the replacement word thing and it should be all set to go.
+                    //TODO: --3-- just need to fix the replacement word thing and it should be all set to go.
                     if (swapNode != null)
                     { // add new node once done iterating, then enque it
                         onDeck.Children.Add(replaceWithThisWord, swapNode);
@@ -475,66 +470,6 @@ namespace EnglishLearner
             }
         } // function Reset_Trie_Touches
 
-/*
-        /// <summary>
-        /// Finds a new sentence that hasn't been touched recently.
-        /// </summary>
-        /// <param name="trieDict"></param>
-        /// <param name="reset_trie"></param>
-        /// <example> var n = trieDict[key].Find_Sentence(trieDict, true); var f = trieDict[key].Find_Sentence(trieDict);</example>
-        /// <returns>Returns a linked list containing the sentence, although from the tail of the LinkedList due to recursion. So remember, previous is actually the next word, next is the previous word.</returns>
-        public static string Find_Sentence(Dictionary<string, Trie> trieDict)
-        { // Returns the word and type association
-            // TODO: --1-- what is this?
-            LinkedList<TrieNode> llSentence = new LinkedList<TrieNode>();
-            LinkedListNode<TrieNode> lln = null;
-
-            string rebuildSentence = "";
-            foreach (string key in trieDict.Keys)
-            {
-                for (int i = 0; i < trieDict[key].ListOfSentenceArrays.Count; i++)
-                { // each phrase  
-                    DFS_Find_Sentence(llSentence, ref lln, trieDict[key].Root);
-                    if (llSentence.Count > 0)  
-                    {
-                        rebuildSentence = lln.Value.Word;
-                        while (lln.Previous != null)
-                        {
-                            rebuildSentence += " ";
-                            rebuildSentence += lln.Previous.Value.Word;
-                            lln = lln.Previous;
-                        }
-
-                        foreach (char punct in lln.Value.TypesOfPunctuation)
-                        {
-                            if (lln.Value.SearchedPunctuation.Contains(punct))
-                            { // the retainer of an already searched node that has different punctuation
-                                continue;
-                            }
-                            string temp = rebuildSentence;
-                            temp += punct;
-
-                            Phrase tTest = null;
-                            // TODO: --3-- if i plan on using this again, you need to loop through the list unfortunately
-                            //trieDict[key].ListOfSentenceArrays.TryGetValue(temp, out tTest);
-
-                            if (tTest != null)
-                            {
-                                lln.Value.SearchedPunctuation += punct;
-
-                                FindNode fnNode = new FindNode(tTest.Split_Sentence, lln.Value);
-                                trieDict[key].Update_Node(fnNode);
-                                rebuildSentence = temp;
-                                goto GotSentence; // we got one and we're done
-                            }
-                        } // foreach
-                    } // if count > 0
-                } // for ListOfPhrases count
-            } // foreach key
-            GotSentence:
-            return rebuildSentence;
-        }
-*/
         public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict, string[] sentenceArray)
         { // Returns based off an exact sentence passed in
 

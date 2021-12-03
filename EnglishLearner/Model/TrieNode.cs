@@ -16,7 +16,7 @@ namespace EnglishLearner
     {
         public Dictionary<string, TrieNode> Children { get; set; } // Basically Next
         public string Word { get; set; }
-        public string WordType { get; set; } // TODO: --1-- need to add these at every time the node is created
+        public string WordType { get; set; }
         public string TypesOfPunctuation { get; set; }
         public string SearchedPunctuation { get; set; }
         public int NodeDepth { get; set; }
