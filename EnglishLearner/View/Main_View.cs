@@ -176,18 +176,18 @@ namespace EnglishLearner
                                                 string userin = Console.ReadLine();
                                                 string typeGiven = userin.ToUpper();
 
-                                                if (userin.Equals("") || !wordTypes.Contains(userin.ToUpper()))
-                                                {
-                                                    Console.WriteLine("Improper Input! Please type something else.");
-                                                    goto RetryNodeFix;
-                                                }
-                                                else if (userin.ToLower().Equals("--help"))
+                                                if (userin.ToLower().Equals("--help"))
                                                 {
                                                     Console.WriteLine("\n\tHelp: What type of word should this be?\nSentence Pattern:\nA: Definite article\nC: Conjunction\nD: Adverb\nJ: Adjective\nN: Noun\nP: Preposition\nV: Verb\n");
                                                 }
                                                 else if (userin.ToLower().Equals("--exit"))
                                                 {
                                                     goto MainMenu;
+                                                }
+                                                else if (userin.Equals("") || !wordTypes.Contains(userin.ToUpper()))
+                                                {
+                                                    Console.WriteLine("Improper Input! Please type something else.");
+                                                    goto RetryNodeFix;
                                                 }
                                                 else
                                                 { // replace and update node
@@ -219,19 +219,25 @@ namespace EnglishLearner
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
                         case '3':
-                            Console.Write("Hey lets chat! You start.\n");
+                            Console.Write("\nHey lets chat! You start.\n");
                             bool doneTalking = false;
                             while (!doneTalking)
                             {
+                                Console.WriteLine("\nYour turn:\n");
                                 UserTypedEnter:
                                 string userSentence = Console.ReadLine();
                                 Phrase whatPhrase = new Phrase(userSentence, sqlTransposed);
 
                                 try
                                 {
-                                    if (userSentence.Equals(""))
+                                    if (userSentence.Equals("--exit"))
                                     {
-                                        Console.WriteLine("Improper Input! Please type something else.");
+                                        doneTalking = false;
+                                        break;
+                                    }
+                                    else if (userSentence.Equals("") || whatPhrase.Sentence.Length < 1)
+                                    {
+                                        Console.WriteLine("\nImproper Input! Please type something else.\n");
                                         goto UserTypedEnter;
                                     }
                                     else if (IsSentenceCorrect(whatPhrase))
@@ -239,70 +245,42 @@ namespace EnglishLearner
                                         TrieAction(whatPhrase);
                                         LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, whatPhrase.Split_Sentence); // should be right at the end so we can do the next check
 
-                                        if (lln.Value != null)
+                                        if (lln != null)
                                         {
-                                            if (lln.Value.KnownResponses.Count > 0)
+                                            if (userSentence.Equals("--exit"))
+                                            {
+                                                doneTalking = false;
+                                                break;
+                                            }
+                                            else if (lln.Value.KnownResponses.Count > 0)
                                             {
                                                 Random rng = new Random();
-                                                int rngNumber = rng.Next(0, lln.Value.KnownResponses.Count);
-                                                Console.WriteLine(lln.Value.KnownResponses[rngNumber].Sentence);
+                                                int rngNumber = rng.Next(0, lln.Value.KnownResponses.Count - 1);
+                                                Console.WriteLine(lln.Value.KnownResponses[rngNumber].Sentence + "\n");
 
-                                                Console.WriteLine("Was that an okay response? y/n\n");
-
-                                                char[] validYes = new char[] { 'y', 'Y' };
-                                                char[] validNo = new char[] { 'n', 'N' };
-
-                                                var userIn = Console.ReadKey().KeyChar;
-                                                while (true)
+                                                Console.WriteLine("\nCan you teach me another way to respond?\n");
+                                                string responseSentence = Console.ReadLine();
+                                                if (responseSentence.Equals("--exit"))
                                                 {
-                                                    if (validNo.Contains(userIn))
-                                                    {
-                                                        wantToContinue = false;
-                                                        break;
-                                                    }
-                                                    else if (validYes.Contains(userIn))
-                                                    {
-                                                        break;
-                                                    }
-                                                    else
-                                                    {
-                                                        Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
-                                                        userIn = Console.ReadKey().KeyChar;
-                                                    }
+                                                    doneTalking = false;
+                                                    break;
                                                 }
-
-                                                if (validNo.Contains(userIn))
-                                                {
-                                                    bool findingNode = true;
-                                                    while (findingNode)
-                                                    {
-                                                        Console.WriteLine("What words look wrong?\n");
-                                                        string userin = Console.ReadLine();
-
-                                                        if (userin.ToLower().Equals("--exit"))
-                                                        {
-                                                            goto MainMenu;
-                                                        }
-                                                        else
-                                                        { // replace and update node
-                                                            findingNode = false;
-                                                        } // else
-                                                    } // while finding the node
-                                                }
+                                                AddKnownResponse(responseSentence, lln);
                                             }
                                             else
                                             {
-                                                Console.WriteLine("Hmm, I don't know what to say to that. Can you teach me what I could reply with?");
+                                                Console.WriteLine("\nHmm, I don't know what to say to that. Can you teach me what I could reply with?\n");
                                                 string responseSentence = Console.ReadLine();
                                                 AddKnownResponse(responseSentence, lln);
                                             }
                                             // TODO: --1-- for a random response, we'd need a BFS search to look for word types and then traverse accordingly until we get a matching sentence pattern. return it as a sentence, and then create a new phrase for generation
-                                        }
+                                        } // if
 
                                     } // if; else
                                 }
                                 catch (Exception e)
                                 {
+                                    break;
                                     Console.WriteLine("Something went wring with Case 3: Chatting. See log file for details.");
                                     UniversalFunctions.LogToFile("Case 3: Chatting Exception:", e);
                                 }

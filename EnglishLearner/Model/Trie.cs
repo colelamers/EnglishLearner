@@ -290,15 +290,22 @@ namespace EnglishLearner
         private void DFS_Update_Node(FindNode fnNode, TrieNode whichNode)
         {
             UniversalFunctions.LogToFile("DFS_FW called...");
+            try
+            {
+                if (whichNode.NodeDepth + 1 < fnNode.NodePayload.NodeDepth && fnNode.NodePayload.NodeDepth != 0)
+                { // dive down
+                    DFS_Update_Node(fnNode, whichNode.Children[fnNode.SentenceArray[whichNode.NodeDepth + 1]]);
+                }
+                else
+                { // update node
+                    whichNode = fnNode.NodePayload;
+                }
+            }
+            catch (Exception e)
+            {
+                UniversalFunctions.LogToFile("Error", e);
+            }
 
-            if (whichNode.NodeDepth < fnNode.NodePayload.NodeDepth && fnNode.NodePayload.NodeDepth != 0)
-            { // dive down
-                DFS_Update_Node(fnNode, whichNode.Children[fnNode.SentenceArray[whichNode.NodeDepth + 1]]);
-            }
-            else
-            { // update node
-                whichNode = fnNode.NodePayload;
-            }
         } // function DFS_Find_Word
 
         private void DFS_Find_All_Word_Instances(string findThisWord, ref List<TrieNode> listOfNodes, TrieNode whichNode)
@@ -497,7 +504,7 @@ namespace EnglishLearner
             LinkedListNode<TrieNode> lln = null;
 
             Trie tempTrie = null;
-            trieDict.TryGetValue(sentenceArray[0], out tempTrie);
+            trieDict.TryGetValue(sentenceArray[0].ToProper(), out tempTrie);
 
             if (tempTrie != null)
             {

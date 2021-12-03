@@ -199,17 +199,20 @@ namespace EnglishLearner
         public static string GetPunctuation(string[] sentenceAsArray)
         {
             UniversalFunctions.LogToFile("GetPunctuation called...");
-
-            string finalWord = sentenceAsArray[sentenceAsArray.Length - 1];
-            int finalWordPunctuationIndex = finalWord.Length - 1;
             string punctuation = ".";
 
-            if (finalWord.IndexOfAny(endPunctuation) >= 0)
+            if (sentenceAsArray.Length > 0)
             {
-                punctuation = finalWord[finalWordPunctuationIndex].ToString();
-                finalWord = finalWord.Remove(finalWordPunctuationIndex);
-                sentenceAsArray[sentenceAsArray.Length - 1] = finalWord;
-            } // if; checks for end sentence punctuation and updates it if it's different and removes it from the split setence
+                string finalWord = sentenceAsArray[sentenceAsArray.Length - 1];
+                int finalWordPunctuationIndex = finalWord.Length - 1;
+
+                if (finalWord.IndexOfAny(endPunctuation) >= 0)
+                {
+                    punctuation = finalWord[finalWordPunctuationIndex].ToString();
+                    finalWord = finalWord.Remove(finalWordPunctuationIndex);
+                    sentenceAsArray[sentenceAsArray.Length - 1] = finalWord;
+                } // if; checks for end sentence punctuation and updates it if it's different and removes it from the split setence
+            }
             return punctuation;
         }
 

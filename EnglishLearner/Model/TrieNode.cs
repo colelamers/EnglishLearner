@@ -22,7 +22,7 @@ namespace EnglishLearner
         public int NodeDepth { get; set; }
         public bool RecentlyTouched { get; set; }
         public bool CanBeLastWord { get; set; }
-        public List<Phrase> KnownResponses { get; set; }
+        public List<Phrase> KnownResponses { get; set; } // node so we can get sentence patterns
 
 
         public TrieNode(string word, int currentDepth, string wordTypeAsLetter)

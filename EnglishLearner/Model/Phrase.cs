@@ -22,7 +22,6 @@ namespace EnglishLearner
         public string First_Word { get; set; } // TODO: --3-- think about removing cause it's not really necessary, just enhances readability
         public string Punctuation { get; set; }
         public string[] SentencePattern { get; set; } // TODO: --3-- consider removing this or something after node creation?
-        public bool IsPhraseLegal { get; set; }
         /*
          * Sentence Pattern:
          * A: Definite article
@@ -35,15 +34,21 @@ namespace EnglishLearner
          */
         public Phrase(string sentence, Dictionary<string, string[]> sqlAsDict)
         {
-            UniversalFunctions.LogToFile($"Logging new Phrase sentence:\n\t{sentence}\n");
-            this.Split_Sentence = SentenceFunctions.GetSplitSentence(sentence);
-            this.Punctuation = SentenceFunctions.GetPunctuation(Split_Sentence);
-            this.Sentence_NoPunctuation = string.Join("", sentence.Split(new char[] { '.', '!', '?', ',' }));
+            try
+            {
+                UniversalFunctions.LogToFile($"Logging new Phrase sentence:\n\t{sentence}\n");
+                this.Split_Sentence = SentenceFunctions.GetSplitSentence(sentence);
+                this.Punctuation = SentenceFunctions.GetPunctuation(Split_Sentence);
+                this.Sentence_NoPunctuation = string.Join("", sentence.Split(new char[] { '.', '!', '?', ',' }));
 
-            this.Sentence = string.Join("", sentence.Split(new char[] { '.', '!', '?', ',' })) + this.Punctuation;
-            this.First_Word = this.Split_Sentence[0].ToProper();
-            this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Split_Sentence, sqlAsDict);
-            this.IsPhraseLegal = false;
+                this.Sentence = string.Join("", sentence.Split(new char[] { '.', '!', '?', ',' })) + this.Punctuation;
+                this.First_Word = this.Split_Sentence[0].ToProper();
+                this.SentencePattern = SentenceFunctions.GetSeteneceWordTypePattern(this.Split_Sentence, sqlAsDict);
+            }
+            catch (Exception e)
+            {
+                UniversalFunctions.LogToFile("Error at phrase:", e);
+            }
         }
     }
 }

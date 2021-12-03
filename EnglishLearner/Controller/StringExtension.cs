@@ -8,9 +8,17 @@ namespace EnglishLearner
     {
         public static string ToProper(this string st)
         {
-            char[] word = st?.ToCharArray();
-            word[0] = char.ToUpper(word[0]);
-            return new string(word);
+            try
+            {
+                char[] word = st?.ToCharArray();
+                word[0] = char.ToUpper(word[0]);
+                return new string(word);
+            }
+            catch(Exception e)
+            {
+                UniversalFunctions.LogToFile("Exception", e);
+            }
+            return st;
         } // function ToProper
 
 /*
