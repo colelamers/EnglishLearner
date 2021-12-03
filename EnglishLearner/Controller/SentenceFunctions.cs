@@ -314,7 +314,7 @@ namespace EnglishLearner
                     /*
                      * Sentence Pattern:
                      * A: Definite article
-                     * C: Conjugation
+                     * C: Conjunction
                      * D: Adverb
                      * J: Adjective
                      * N: Noun

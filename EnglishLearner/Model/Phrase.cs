@@ -26,16 +26,13 @@ namespace EnglishLearner
         /*
          * Sentence Pattern:
          * A: Definite article
-         * C: Conjugation
+         * C: Conjunction
          * D: Adverb
          * J: Adjective
          * N: Noun
          * P: Preposition
          * V: Verb
          */
-
-        // TODO: --1-- if a correction happens, perform the Trie find and update all others, maybe only if they are at that location or if the preceeding and ensuing patter matches?
-
         public Phrase(string sentence, Dictionary<string, string[]> sqlAsDict)
         {
             UniversalFunctions.LogToFile($"Logging new Phrase sentence:\n\t{sentence}\n");

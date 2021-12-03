@@ -16,12 +16,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="EpubSharp">
-      <HintPath>bin\Debug\netcoreapp3.1\EpubSharp.dll</HintPath>
-    </Reference>
     <Reference Include="ProjectLogging">
       <HintPath>bin\Debug\netcoreapp3.1\ProjectLogging.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Licenses\" />
   </ItemGroup>
 
 </Project>

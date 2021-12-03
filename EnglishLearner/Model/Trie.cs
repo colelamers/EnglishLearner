@@ -18,18 +18,16 @@ namespace EnglishLearner
     [Serializable]
     class Trie
     {
-        //public Dictionary<string, Phrase> DictOfPhrases = new Dictionary<string, Phrase>();
         public List<string[]> ListOfSentenceArrays = new List<string[]>();
-        //public List<TrieNode> ListOfNodes = new List<TrieNode>();
         public int MaxNodeLevel = 0;
-        public TrieNode Root { get; private set; } // TODO: --4-- when you get the chance, fix how this works. dictionary of tries or something should most definitely be here.
+        public TrieNode Root { get; private set; } // TODO: --4-- fix how this works. Key should pull like a null or something and only child keys from that location. so nodedepth 0 shouldn't be anything
 
         #region Trie Generation
         public Trie(Phrase currentPhrase)
         {
             UniversalFunctions.LogToFile("Trie Constructor called...");
-
             this.ListOfSentenceArrays.Add(currentPhrase.Split_Sentence);
+
             this.Root = new TrieNode(currentPhrase.First_Word, 0, currentPhrase.SentencePattern[0]);
             TrieNode Current = this.Root; // TODO: --4-- can most likely add the dictionary here instead of having it declared elsewhere
             TrieNode Next = null;
@@ -110,23 +108,22 @@ namespace EnglishLearner
             { // adds another ending punctuation if the same sentence with a different ending punctuation comes up
                 Current.TypesOfPunctuation += (Current.TypesOfPunctuation.Contains(currentPhrase.Punctuation) ? "" : currentPhrase.Punctuation);
             }
-
         } // function DFS_Traversal; starts after root is chosen elsewhere
 
 
         #endregion Trie Generation
 
         #region Breadth Search
-        public static void UpdateAllWords(Dictionary<string, Trie> trieDict, string wordToUpdate, string wordTypeToUpdate)
+        public static void UpdateWordTypes(Dictionary<string, Trie> trieDict, TrieNode node)
         { // Due to the nature of how I have the trieDict set up, I have to do a DFS/BFS hybrid. DFS by Trie, but BFS by node. Hence the two foreach loops.
-            Reset_Trie_Touches(trieDict);
+            //Reset_Trie_Touches(trieDict);
             Queue<TrieNode> bfs_queue = new Queue<TrieNode>();
 
             foreach (string tKey in trieDict.Keys)
-            { // update all node level keys
-                if (tKey.Equals(wordToUpdate))
+            { // updates the trie roots
+                if (tKey.Equals(node.Word))
                 {
-                    trieDict[tKey].Root.WordType = wordTypeToUpdate;
+                    trieDict[tKey].Root.WordType = node.WordType;
                 }
 
                 bfs_queue.Enqueue(trieDict[tKey].Root);
@@ -136,15 +133,109 @@ namespace EnglishLearner
                     var dequed = bfs_queue.Dequeue();
 
                     foreach (string childKey in dequed.Children.Keys)
-                    {
-                        if (dequed.Children[childKey].Word.Equals(wordToUpdate))
+                    { // update the remaining trie children
+                        if (dequed.Children[childKey].Word.Equals(node.Word))
                         {
-                            dequed.Children[childKey].WordType = wordTypeToUpdate.ToUpper();
+                            dequed.Children[childKey].WordType = node.WordType;
                         }
                         bfs_queue.Enqueue(dequed.Children[childKey]);
                     } // each Queue item
                 } // while
+            } // foreach
+        } // function Update All Words 
+
+        public static void DeleteAndReplace(Dictionary<string, Trie> trieDict, Phrase zPhrase, string wordToRemove, string replaceWithThisWord)
+        { // Due to the nature of how I have the trieDict set up, I have to do a DFS/BFS hybrid. DFS by Trie, but BFS by node. Hence the two foreach loops.
+            //Reset_Trie_Touches(trieDict);
+
+            // TODO: --4-- fix nodes as they come in 
+            foreach (string tKey in trieDict.Keys)
+            { // updates the trie roots; have to correct children of primary roots before we can adjust the roots
+                Queue<TrieNode> bfs_queue = new Queue<TrieNode>();
+                bfs_queue.Enqueue(trieDict[tKey].Root);
+
+                while (bfs_queue.Count > 0)
+                {
+                    var onDeck = bfs_queue.Dequeue();
+                    
+                    string removeNodeKey = "";
+                    string findWordType = "";
+
+                    for (int i = 0; i < zPhrase.Split_Sentence.Length; i++)
+                    {
+                        if (zPhrase.Split_Sentence[i].ToLower().Equals(wordToRemove.ToLower()))
+                        {
+                            findWordType = zPhrase.SentencePattern[i];
+                        }
+                    }
+
+                    TrieNode swapNode = new TrieNode(replaceWithThisWord, onDeck.NodeDepth, findWordType);
+                    foreach (KeyValuePair<string, TrieNode> childKey in onDeck.Children)
+                    {
+                        if (childKey.Key.ToLower().Equals(wordToRemove.ToLower()))
+                        {
+                            foreach (KeyValuePair<string, TrieNode> grandChildKey in childKey.Value.Children)
+                            {
+                                swapNode.Children.Add(grandChildKey.Key, grandChildKey.Value);
+                            }
+                            swapNode.Children = childKey.Value.Children;
+                            removeNodeKey = childKey.Key;
+                        }
+                        else
+                        {
+                            swapNode.Children.Add(childKey.Key, childKey.Value);
+                            bfs_queue.Enqueue(onDeck.Children[childKey.Key]);
+                        }
+                    }
+
+                    //TODO: --1-- just need to fix the replacement word thing and it should be all set to go.
+                    if (swapNode != null)
+                    { // add new node once done iterating, then enque it
+                        onDeck.Children.Add(replaceWithThisWord, swapNode);
+                        bfs_queue.Enqueue(onDeck.Children[replaceWithThisWord]);
+                    }
+
+                    if (!removeNodeKey.Equals(""))
+                    {
+                        onDeck.Children.Remove(removeNodeKey);
+                    }
+                } // while
+            } // foreach
+
+
+            Trie swapTrie = new Trie(zPhrase);
+            string removeTrieKey = "";
+/*
+            foreach (KeyValuePair<string, Trie> childKey in trieDict)
+            {
+                if (childKey.Key.ToLower().Equals(wordToRemove.ToLower()))
+                {
+                    swapTrie.Root.Children.Add(replaceWithThisWord);
+
+                    swapTrie.Enqueue(childKey.Value);
+                    removeTrieKey = childKey.Key;
+                }
+                else
+                {
+                    swapTrie.Root.Children.Add(childKey.Key, childKey.Value);
+                }
             }
+
+            while (swapTrie.Count > 0)
+            { // add new node once done iterating, then enque it
+                char capitalFirstLetter = replaceWithThisWord.ToUpper().ToCharArray()[0]; // Capitalize First letter
+                string modulusCharacters = replaceWithThisWord.Remove(0, 1);              // Remove first character from residual letters
+                string bfs_replacementword = capitalFirstLetter + modulusCharacters;      // Combine capitalized with original set
+
+                trieDict.Add(bfs_replacementword, swapTrie.Dequeue());
+            }
+
+            while (removeTrieKey.Count > 0)
+            { // remove keys
+                trieDict.Remove(removeKeys.Dequeue());
+            }*/
+
+
         } // function Update All Words 
 
         private static void BFS_UpdateAllWords(TrieNode whichNode, string wordToUpdate, string wordTypeToUpdate)
@@ -299,8 +390,6 @@ namespace EnglishLearner
 
         #endregion Depth Search
 
-        // TODO: --1-- may need at Delete everything at this node in case someone types in gibberish So delete at the node past the pipe "|". Ex: I am the | want apples whereof who cats
-
         public List<TrieNode> Find_All_Instances(string findThisWord, bool dfs_default = true)
         {
             List<TrieNode> listOfNodes = new List<TrieNode>();
@@ -318,7 +407,6 @@ namespace EnglishLearner
 
         private static void ResetTrieTouchedValues(TrieNode whichNode)
         {
-            // TODO: --1-- need to perform after a search
             UniversalFunctions.LogToFile("ResetTrieTouchedValues called...");
             whichNode.RecentlyTouched = false;
             TrieNode Next = null;
@@ -404,6 +492,7 @@ namespace EnglishLearner
 */
         public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict, string[] sentenceArray)
         { // Returns the word and type association
+            // TODO: --1-- need to do the touching thing again here. that way you don't need to pass in a sentence.
             LinkedList<TrieNode> llSentence = new LinkedList<TrieNode>();
             LinkedListNode<TrieNode> lln = null;
 

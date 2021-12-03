@@ -14,14 +14,14 @@ namespace EnglishLearner
     [Serializable]
     class TrieNode
     {
-        public Dictionary<string, TrieNode> Children { get; set; } // string = key, TreeNode = new KvP list of potential nodes
+        public Dictionary<string, TrieNode> Children { get; set; } // Basically Next
         public string Word { get; set; }
         public string WordType { get; set; } // TODO: --1-- need to add these at every time the node is created
+        public string TypesOfPunctuation { get; set; }
+        public string SearchedPunctuation { get; set; }
         public int NodeDepth { get; set; }
         public bool RecentlyTouched { get; set; }
         public bool CanBeLastWord { get; set; }
-        public string TypesOfPunctuation { get; set; }
-        public string SearchedPunctuation { get; set; }
         public List<Phrase> KnownResponses { get; set; }
 
 
@@ -30,7 +30,7 @@ namespace EnglishLearner
             this.Word = word;
             this.Children = new Dictionary<string, TrieNode>();
             this.NodeDepth = currentDepth;
-            this.WordType = wordTypeAsLetter;
+            this.WordType = wordTypeAsLetter.ToUpper();
             this.RecentlyTouched = false;
             this.CanBeLastWord = false;
             this.TypesOfPunctuation = ""; // blank by default

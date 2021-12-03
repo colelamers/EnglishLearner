@@ -39,89 +39,21 @@ namespace EnglishLearner
                     .ToDictionary(x => x.Key, y => y.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().ToArray()); // Converts datatable into a Dictionary in the way you want it based on the column fields in the datatable
             } // Using Sqlite_Actions to get sql data but feed uniques into a dictionary
 
-
-
-            if (trieDict.Count == 0)
-            {
-                List<string> listOfSentences = new List<string>()
-                {
-                    "Hi, how are you?",
-                    "Hi, how are you.",
-                    "Hi, how are you today?",
-                    "Hi, how are you today sir?",
-                    "Hey, how is it going?",
-                    "What's your name?",
-                    "Hello, I am a sentence learning AI.",
-                    "I know a few things already, so lets chat and increase my memory!",
-                    "Yeah.",
-                    "Uh huh",
-                    "He happilly sang in the choir!",
-                    "  It's the, preciou's food!",
-                    "...",
-                    "I like the food here?",
-                    "I like the food here?",  //Since it's a dupe, it doesn't add
-                    "The quick brown fox jumped over the lazy dog.",
-                    "the slow brown fox jumped over the lazy dog.",
-                    "The crazy red fox jumped over the lazy dog.",
-                    "What are you going to do about it boy?",
-                    "How are you today?",
-                    "What did you like about the movie?",
-                    "I really hated that film.",
-                    "It was just so stupid.",
-                    "Well I agree with all those points.",
-                    "The idea of getting 6 million points became a thing, because that's all there was to do.",
-                    "It's true.",
-                    "I own several.",
-                    "Yeah.",
-                    "You're playing that game still?",
-                    "It just violates all these laws.",
-                    "Like it's doing it at the same time, and literally, these particles disappear.",
-                    "And I go, well it's an open door.",
-                    "You should totally open a club called Houstons.",
-                    "They see themselves as global citizens divorced from any allegience.",
-                    "You know she ran off with Ken, right.",
-                    "So help yourself.",
-                    "If I spent my 50 pence on a Mars Bar, it wouldn't be making enough for the day.",  //uses a unique noun "mars bar"
-                    "No don't worry about it, it's just easy.",
-                    "I'm still struggling with the async functions cause the way my.",
-                    "I have very good posture."
-                };
-
-                foreach (string sentence in listOfSentences)
-                {
-                    try
-                    {
-                        Phrase whatPhrase = new Phrase(sentence, sqlTransposed);
-                        TrieAction(whatPhrase);
-                        //this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
-                    }
-                    catch (Exception e)
-                    {
-                        UniversalFunctions.LogToFile("Something went wrong loading the file...", e);
-                    }
-                } // foreach
-
-                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
-            }
-
-
             Console.WriteLine("==================================================\n" +
                               "==================English Learner=================\n" +
                               "==================================================\n\n");
 
+            // Load
+            this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
             bool interact = true;
             while (interact)
             {
-                Trie.UpdateAllWords(this.trieDict, "agree", "p");
                 MainMenu:
-                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
-
                 Console.WriteLine("Options:\n\n" +
                                   "1) Add individual Sentence\n" +
                                   "2) Help me with a sentence\n" +
                                   "3) Chat\n" +
-                                  "4) Find a word I might know\n" +  
-                                  "5) Exit\n");
+                                  "4) Exit\n");
                 try
                 {
                     switch (Console.ReadKey().KeyChar)
@@ -143,18 +75,27 @@ namespace EnglishLearner
                                     char[] validNo = new char[] { 'n', 'N' };
 
                                     var userIn = Console.ReadKey().KeyChar;
-                                    while (!validYes.Contains(userIn) || !validNo.Contains(userIn))
+                                    while (true)
                                     {
-                                        Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
+                                        if (validNo.Contains(userIn))
+                                        {
+                                            wantToContinue = false;
+                                            break;
+                                        }
+                                        else if (validYes.Contains(userIn))
+                                        {
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
+                                            userIn = Console.ReadKey().KeyChar;
+                                        }
                                     }
 
-                                    if (validNo.Contains(userIn))
-                                    {
-                                        break;
-                                    }
+   
                                 } // if; else
                             } // while continuing
-
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
                         case '2':
@@ -168,6 +109,14 @@ namespace EnglishLearner
                                 while (i < this.trieDict[key].ListOfSentenceArrays.Count)
                                 { // foreach sentence, incrementing is based on if there are no "?" in the sentence
                                     LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, trieDict[key].ListOfSentenceArrays[i]); // TODO: --3-- might need a null check for this in the future
+                                    int llnDepth = 0;
+                                    var llnForCount = lln;
+                                    while (llnForCount != null)
+                                    { // gets the total depth
+                                        llnDepth++;
+                                        llnForCount = llnForCount.Next;
+                                    }
+                                    
                                     var temp = lln;
                                     while (temp != null)
                                     {
@@ -191,11 +140,17 @@ namespace EnglishLearner
                                     PrintPhraseInfo(lln);
                                     try
                                     {
+                                        UserHitenter:
                                         Console.WriteLine("What index to correct?");
                                         string decision = Console.ReadLine();
                                         int indexUpdated = 0;
 
-                                        if (decision.ToLower().Equals("--exit"))
+                                        if (decision.Equals(""))
+                                        {
+                                            Console.WriteLine("Improper Input! Please type something else.");
+                                            goto UserHitenter;
+                                        }
+                                        else if (decision.ToLower().Equals("--exit"))
                                         { // checks in case the user wishes to exit prematurely
                                             goto MainMenu;
                                         }
@@ -211,26 +166,28 @@ namespace EnglishLearner
                                         {
                                             PrintPhraseInfo(lln);
                                         }
-                                        else if (int.TryParse(decision, out indexUpdated))
+                                        else if (int.TryParse(decision, out indexUpdated) && indexUpdated < llnDepth)
                                         { // find index
                                             bool findingNode = true;
                                             while (findingNode)
                                             {
+                                                RetryNodeFix:
                                                 Console.WriteLine("What type should it be?");
                                                 string userin = Console.ReadLine();
                                                 string typeGiven = userin.ToUpper();
 
-                                                if (typeGiven.ToLower().Equals("--help"))
+                                                if (userin.Equals("") || !wordTypes.Contains(userin.ToUpper()))
                                                 {
-                                                    Console.WriteLine("\n\tHelp: What type of word should this be?\nSentence Pattern:\nA: Definite article\nC: Conjugation\nD: Adverb\nJ: Adjective\nN: Noun\nP: Preposition\nV: Verb\n");
+                                                    Console.WriteLine("Improper Input! Please type something else.");
+                                                    goto RetryNodeFix;
                                                 }
-                                                else if (typeGiven.ToLower().Equals("--exit"))
+                                                else if (userin.ToLower().Equals("--help"))
+                                                {
+                                                    Console.WriteLine("\n\tHelp: What type of word should this be?\nSentence Pattern:\nA: Definite article\nC: Conjunction\nD: Adverb\nJ: Adjective\nN: Noun\nP: Preposition\nV: Verb\n");
+                                                }
+                                                else if (userin.ToLower().Equals("--exit"))
                                                 {
                                                     goto MainMenu;
-                                                }
-                                                else if (!wordTypes.Contains(typeGiven))
-                                                {
-                                                    Console.WriteLine("Not a valid input. Please use --help to see valid TYPE keys.\n");
                                                 }
                                                 else
                                                 { // replace and update node
@@ -246,8 +203,8 @@ namespace EnglishLearner
                                                         temp_lln = temp_lln.Next;
                                                     }
                                                     tNode.WordType = typeGiven;
-                                                    FindNode fnLookup = new FindNode(this.trieDict[key].ListOfSentenceArrays[i], tNode);
-                                                    this.trieDict[key].Update_Node(fnLookup);
+                                                    Trie.UpdateWordTypes(this.trieDict, tNode); // update all words means we don't have to just update the singular node
+                                                    findingNode = false;
                                                 } // else
                                             } // while finding the node
                                         } // if
@@ -257,48 +214,103 @@ namespace EnglishLearner
                                         Console.WriteLine("Something went wrong. Please see error log for details.\n");
                                         UniversalFunctions.LogToFile("Main Menu Choice 2: Error", e);
                                     } // catch
-
                                 } // for each array item
                             }
+                            UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
                         case '3':
                             Console.Write("Hey lets chat! You start.\n");
                             bool doneTalking = false;
                             while (!doneTalking)
                             {
+                                UserTypedEnter:
                                 string userSentence = Console.ReadLine();
                                 Phrase whatPhrase = new Phrase(userSentence, sqlTransposed);
 
-                                if (userSentence.Equals("--exit"))
+                                try
                                 {
-                                    break;
+                                    if (userSentence.Equals(""))
+                                    {
+                                        Console.WriteLine("Improper Input! Please type something else.");
+                                        goto UserTypedEnter;
+                                    }
+                                    else if (IsSentenceCorrect(whatPhrase))
+                                    {
+                                        TrieAction(whatPhrase);
+                                        LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, whatPhrase.Split_Sentence); // should be right at the end so we can do the next check
+
+                                        if (lln.Value != null)
+                                        {
+                                            if (lln.Value.KnownResponses.Count > 0)
+                                            {
+                                                Random rng = new Random();
+                                                int rngNumber = rng.Next(0, lln.Value.KnownResponses.Count);
+                                                Console.WriteLine(lln.Value.KnownResponses[rngNumber].Sentence);
+
+                                                Console.WriteLine("Was that an okay response? y/n\n");
+
+                                                char[] validYes = new char[] { 'y', 'Y' };
+                                                char[] validNo = new char[] { 'n', 'N' };
+
+                                                var userIn = Console.ReadKey().KeyChar;
+                                                while (true)
+                                                {
+                                                    if (validNo.Contains(userIn))
+                                                    {
+                                                        wantToContinue = false;
+                                                        break;
+                                                    }
+                                                    else if (validYes.Contains(userIn))
+                                                    {
+                                                        break;
+                                                    }
+                                                    else
+                                                    {
+                                                        Console.WriteLine("That is not a proper input, please type \"y\" or \"n\"");
+                                                        userIn = Console.ReadKey().KeyChar;
+                                                    }
+                                                }
+
+                                                if (validNo.Contains(userIn))
+                                                {
+                                                    bool findingNode = true;
+                                                    while (findingNode)
+                                                    {
+                                                        Console.WriteLine("What words look wrong?\n");
+                                                        string userin = Console.ReadLine();
+
+                                                        if (userin.ToLower().Equals("--exit"))
+                                                        {
+                                                            goto MainMenu;
+                                                        }
+                                                        else
+                                                        { // replace and update node
+                                                            findingNode = false;
+                                                        } // else
+                                                    } // while finding the node
+                                                }
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine("Hmm, I don't know what to say to that. Can you teach me what I could reply with?");
+                                                string responseSentence = Console.ReadLine();
+                                                AddKnownResponse(responseSentence, lln);
+                                            }
+                                            // TODO: --1-- for a random response, we'd need a BFS search to look for word types and then traverse accordingly until we get a matching sentence pattern. return it as a sentence, and then create a new phrase for generation
+                                        }
+
+                                    } // if; else
                                 }
-                                else if (IsSentenceCorrect(whatPhrase))
+                                catch (Exception e)
                                 {
-                                    TrieAction(whatPhrase);
-                                    LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(trieDict, whatPhrase.Split_Sentence); // should be right at the end so we can do the next check
-                                    if (lln.Value.KnownResponses.Count > 0)
-                                    {
-                                        // TODO: --1-- pick a response. Randomly or contextually? idk...
-                                        // TODO: spit out a sentence and use command --fix to then tell it certain words are incorrect
-                                    }
-                                    else
-                                    {
-                                        // TODO: --1-- read word pattern and then with that information, make an assumption on appropriate responses based on other word patterns.
-                                        Console.WriteLine("Hmm, I don't know what to say to that. Can you teach me what I could reply with?");
-                                        string responseSentence = Console.ReadLine();
-                                        Easy_UpdateNode(responseSentence, lln);
-                                    }
-                                    // TODO: --1-- for a random response, we'd need a BFS search to look for word types and then traverse accordingly until we get a matching sentence pattern. return it as a sentence, and then create a new phrase for generation
-                                } // if; else
+                                    Console.WriteLine("Something went wring with Case 3: Chatting. See log file for details.");
+                                    UniversalFunctions.LogToFile("Case 3: Chatting Exception:", e);
+                                }
+                                
                             } // while not done talking
-                            
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
                         case '4':
-                            // TODO: --1-- work on this
-                            break;
-                        case '5':
                             interact = false;
                             break;
                     } // switch
@@ -309,9 +321,10 @@ namespace EnglishLearner
                     UniversalFunctions.LogToFile("Exception at Main Menu.", e);
                 }
             } // while; main menu
+            UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
         } // function Run;
 
-        private void Easy_UpdateNode(string createdSentence, LinkedListNode<TrieNode> lln)
+        private void AddKnownResponse(string createdSentence, LinkedListNode<TrieNode> lln)
         {
             Phrase responsePhrase = new Phrase(createdSentence, sqlTransposed);
             TrieAction(responsePhrase);
