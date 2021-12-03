@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace EnglishLearner
 {
@@ -49,7 +50,7 @@ namespace EnglishLearner
             {
                 Current.CanBeLastWord = true;
                 Current.TypesOfPunctuation += currentPhrase.Punctuation;
-                Current.KnownResponses = new List<Phrase>();
+                Current.Legal_KnownResponses = new List<Phrase>();
 
                 if (this.MaxNodeLevel < Current.NodeDepth)
                 {
@@ -95,7 +96,7 @@ namespace EnglishLearner
                     { // Final Node level updates
                         Current.CanBeLastWord = true;
                         Current.TypesOfPunctuation += (Current.TypesOfPunctuation.Contains(currentPhrase.Punctuation) ? "" : currentPhrase.Punctuation);
-                        Current.KnownResponses = new List<Phrase>();
+                        Current.Legal_KnownResponses = new List<Phrase>();
 
                         if (this.MaxNodeLevel < Current.NodeDepth)
                         {
@@ -142,6 +143,44 @@ namespace EnglishLearner
                     } // each Queue item
                 } // while
             } // foreach
+        } // function Update All Words 
+
+         public static string ReturnRandomSentenceFromPattern(Dictionary<string, Trie> trieDict, char[] sentencePattern)
+        { // Due to the nature of how I have the trieDict set up, I have to do a DFS/BFS hybrid. DFS by Trie, but BFS by node. Hence the two foreach loops.
+            //Reset_Trie_Touches(trieDict);
+            Queue<TrieNode> bfs_queue = new Queue<TrieNode>();
+            int index = 0;
+            WordTypeCollections wtc = new WordTypeCollections();
+            
+            foreach (string tKey in trieDict.Keys)
+            { // updates the trie roots
+                var n = wtc.DictOfLists[trieDict[tKey].Root.WordType.ToUpper().ToCharArray()[0]];
+                var z = wtc.DictOfLists[trieDict[tKey].Root.WordType.ToUpper().ToCharArray()[0]].IndexOf(trieDict[tKey].Root.Word);
+                bool k = z < 0;
+                if (wtc.DictOfLists[trieDict[tKey].Root.WordType.ToUpper().ToCharArray()[0]].IndexOf(trieDict[tKey].Root.Word) < 0)
+                { // Just avoids duplicates
+                    wtc.DictOfLists[trieDict[tKey].Root.WordType.ToUpper().ToCharArray()[0]].Add(trieDict[tKey].Root.Word);
+                }
+
+                bfs_queue.Enqueue(trieDict[tKey].Root);
+
+                while (bfs_queue.Count > 0)
+                {
+                    var dequed = bfs_queue.Dequeue();
+
+                    foreach (string childKey in dequed.Children.Keys)
+                    { // update the remaining trie children
+                        if (wtc.DictOfLists[dequed.WordType.ToUpper().ToCharArray()[0]].IndexOf(dequed.Word) < 0)
+                        { // Just avoids duplicates
+                            wtc.DictOfLists[dequed.WordType.ToUpper().ToCharArray()[0]].Add(dequed.Word);
+                        }
+                        bfs_queue.Enqueue(dequed.Children[childKey]);
+                    } // each Queue item
+                } // while
+            } // foreach
+
+            
+            return wtc.GetRandomlyGeneratedSentence(sentencePattern);
         } // function Update All Words 
 
         public static void DeleteAndReplace(Dictionary<string, Trie> trieDict, Phrase zPhrase, string wordToRemove, string replaceWithThisWord)
@@ -335,44 +374,42 @@ namespace EnglishLearner
         { // The reason .RecentlyTouched is in here three times is because it can't be touched
           // until it commits to further recursion or ending it. Otherwise it will always be true.
             UniversalFunctions.LogToFile("DFS_Find_Sentence called...");
-            TrieNode Next = null;
 
-            if (whichNode.Children.Keys.Count > 0)
-            { // determine if next is null
-                // TODO: --4-- after the first if, when trying to find sentences with multiple forms of ending punctuation, it will default to the else meaning it will go recursive when it should end but with the different type of ending punctuation. not very important but just something to try to fix at a later date.
-                if (whichNode.CanBeLastWord == true && !whichNode.RecentlyTouched)
-                { // found a node that can be a final word, but not as a final branch node
+            if (whichNode.CanBeLastWord == true)
+            {
+                if (!whichNode.RecentlyTouched)
+                {
                     whichNode.RecentlyTouched = true;
                     lln = new LinkedListNode<TrieNode>(whichNode);
                     llSentence.AddLast(lln);
                 }
                 else
-                { // Not a final word from a phrase given
-                    whichNode.RecentlyTouched = true;
+                {
                     foreach (string key in whichNode.Children.Keys)
                     {
-                        whichNode.Children.TryGetValue(key, out Next);
-
-                        DFS_Find_Sentence(llSentence, ref lln, Next);
-
-                        if (llSentence.Count > 0)
-                        { // means we found a false end node, now we can collect the sentence
-                            lln = new LinkedListNode<TrieNode>(whichNode);
-                            llSentence.AddLast(lln);
-                            break;
-                        } // if
+                        DFS_Find_Sentence(llSentence, ref lln, whichNode.Children[key]);
+                        if (llSentence.Count > 0) { break; }
                     } // foreach
-                }
-            } // if
-            else
-            { // end of Trie branch
-                if (whichNode.RecentlyTouched == false)
-                { // if end node is false, then add to linked list, otherwise don't
+
                     whichNode.RecentlyTouched = true;
                     lln = new LinkedListNode<TrieNode>(whichNode);
                     llSentence.AddLast(lln);
                 }
-            } // else
+            }
+            else
+            { // Not a final word from a phrase given
+                whichNode.RecentlyTouched = true;
+                foreach (string key in whichNode.Children.Keys)
+                {
+                    DFS_Find_Sentence(llSentence, ref lln, whichNode.Children[key]);
+                    if (llSentence.Count > 0) { break; }
+                } // foreach
+                
+                whichNode.RecentlyTouched = true;
+                lln = new LinkedListNode<TrieNode>(whichNode);
+                llSentence.AddLast(lln);
+            }
+
         } // function DFS_Find_Sentence
 
         private static void DFS_Find_Sentence_With_SentenceArray(LinkedList<TrieNode> llSentence, ref LinkedListNode<TrieNode> lln, TrieNode whichNode, string[]  sentenceArray)
@@ -394,6 +431,7 @@ namespace EnglishLearner
             lln = new LinkedListNode<TrieNode>(whichNode);
             llSentence.AddLast(lln);
         } // function DFS_Find_Sentence
+
 
         #endregion Depth Search
 
@@ -498,8 +536,8 @@ namespace EnglishLearner
         }
 */
         public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict, string[] sentenceArray)
-        { // Returns the word and type association
-            // TODO: --1-- need to do the touching thing again here. that way you don't need to pass in a sentence.
+        { // Returns based off an exact sentence passed in
+
             LinkedList<TrieNode> llSentence = new LinkedList<TrieNode>();
             LinkedListNode<TrieNode> lln = null;
 
@@ -520,6 +558,46 @@ namespace EnglishLearner
 
             return lln;
         } // function Get_Sentence_As_LinkedList
-  
+
+        public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict, LinkedList<TrieNode> newllnList)
+        { // gets first instance on untouched endnodes
+            LinkedListNode<TrieNode> lln = null;
+            bool notFoundYet = false;
+
+            foreach (string tKey in trieDict.Keys)
+            { // finds a linkedlist 
+                DFS_Find_Sentence(newllnList, ref lln, trieDict[tKey].Root);
+                if (newllnList.Count > 0)
+                {
+                    var temp = lln;
+                    while (temp != null)
+                    {
+                        if (temp.Value.WordType.Equals("?"))
+                        {
+                            notFoundYet = true;
+                            break;
+                        }
+                        temp = temp.Previous;
+                    } // while
+                } // if
+
+                if (notFoundYet)
+                {
+                    break;
+                }
+            } // foreach
+/*
+ * Solely for debugging purposes to get the string
+            string testing = "";
+            var test = lln;
+            while (test != null)
+            {
+                testing += test.Value.Word + " ";
+                test = test.Previous;
+            }
+*/
+            return lln;
+        } // function Get_Sentence_As_LinkedList
+
     } // Class Trie
 } // namespace

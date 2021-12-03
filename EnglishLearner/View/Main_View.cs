@@ -25,6 +25,7 @@ namespace EnglishLearner
         private Configuration _config = null;
         private Dictionary<string, Trie> trieDict = new Dictionary<string, Trie>(); // TODO: --3-- this may need to be stored in a brain class
         private Dictionary<string, string[]> sqlTransposed = new Dictionary<string, string[]>();
+        private Dictionary<string, TrieNode> correctedNodes = new Dictionary<string, TrieNode>(); // my cheating way to take care of nodes that get fixed. we just consult this and fix any new ones generated.
 
         private void Run()
         {
@@ -44,11 +45,12 @@ namespace EnglishLearner
                               "==================================================\n\n");
 
             // Load
+
+            this.correctedNodes = UniversalFunctions.LoadBinaryFile<Dictionary<string, TrieNode>>(_config.ProjectFolderPaths.ElementAt(2) + "\\correctedNodes.bin");
             this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
             bool interact = true;
             while (interact)
             {
-                MainMenu:
                 Console.WriteLine("Options:\n\n" +
                                   "1) Add individual Sentence\n" +
                                   "2) Help me with a sentence\n" +
@@ -105,36 +107,12 @@ namespace EnglishLearner
                             // TODO: --2-- i kinda hate this but i'm running out of time so this is just gonna have to do...do it functionally returning trues/falses
                             foreach (string key in this.trieDict.Keys)
                             {
-                                int i = 0;
-                                while (i < this.trieDict[key].ListOfSentenceArrays.Count)
-                                { // foreach sentence, incrementing is based on if there are no "?" in the sentence
-                                    LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, trieDict[key].ListOfSentenceArrays[i]); // TODO: --3-- might need a null check for this in the future
-                                    int llnDepth = 0;
-                                    var llnForCount = lln;
-                                    while (llnForCount != null)
-                                    { // gets the total depth
-                                        llnDepth++;
-                                        llnForCount = llnForCount.Next;
-                                    }
-                                    
-                                    var temp = lln;
-                                    while (temp != null)
-                                    {
-                                        if (temp.Value.WordType.Equals("?"))
-                                        {
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            temp = temp.Next;
-                                        }
-                                    }
+                                Trie.Reset_Trie_Touches(trieDict);
+                                LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, new LinkedList<TrieNode>());
 
-                                    if (temp == null)
-                                    { // looked through list and did not find any "?" for word types, make next sentence 
-                                        i++; // Where the only incrementing occurs. Allows for us to skip over searching an index again and verifying the word type has no "?" and then incrementing again
-                                        continue;
-                                    }
+                                while (lln != null)
+                                {
+                                    int llnDepth = lln.List.Count;
 
                                     Console.WriteLine("\nHere is a sentence that has some unknowns. Can you correct them?\n");
                                     PrintPhraseInfo(lln);
@@ -152,7 +130,7 @@ namespace EnglishLearner
                                         }
                                         else if (decision.ToLower().Equals("--exit"))
                                         { // checks in case the user wishes to exit prematurely
-                                            goto MainMenu;
+                                            goto EndTask;
                                         }
                                         else if (decision.Equals("--skip"))
                                         { // skips to the next iteration
@@ -182,7 +160,7 @@ namespace EnglishLearner
                                                 }
                                                 else if (userin.ToLower().Equals("--exit"))
                                                 {
-                                                    goto MainMenu;
+                                                    goto EndTask;
                                                 }
                                                 else if (userin.Equals("") || !wordTypes.Contains(userin.ToUpper()))
                                                 {
@@ -200,10 +178,13 @@ namespace EnglishLearner
                                                             tNode = temp_lln.Value;
                                                             break;
                                                         }
-                                                        temp_lln = temp_lln.Next;
+                                                        temp_lln = temp_lln.Previous;
                                                     }
                                                     tNode.WordType = typeGiven;
+
+                                                    this.correctedNodes.Add(tNode.Word, tNode);
                                                     Trie.UpdateWordTypes(this.trieDict, tNode); // update all words means we don't have to just update the singular node
+                                                    lln = null;
                                                     findingNode = false;
                                                 } // else
                                             } // while finding the node
@@ -214,8 +195,10 @@ namespace EnglishLearner
                                         Console.WriteLine("Something went wrong. Please see error log for details.\n");
                                         UniversalFunctions.LogToFile("Main Menu Choice 2: Error", e);
                                     } // catch
-                                } // for each array item
+                                }
                             }
+                            EndTask:
+                            UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + "\\correctedNodes.bin", this.correctedNodes);
                             UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
                             break;
                         case '3':
@@ -240,9 +223,10 @@ namespace EnglishLearner
                                         Console.WriteLine("\nImproper Input! Please type something else.\n");
                                         goto UserTypedEnter;
                                     }
-                                    else if (IsSentenceCorrect(whatPhrase))
+                                    else
                                     {
                                         TrieAction(whatPhrase);
+
                                         LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, whatPhrase.Split_Sentence); // should be right at the end so we can do the next check
 
                                         if (lln != null)
@@ -252,11 +236,15 @@ namespace EnglishLearner
                                                 doneTalking = false;
                                                 break;
                                             }
-                                            else if (lln.Value.KnownResponses.Count > 0)
+                                            else if (lln.Value.Legal_KnownResponses != null && lln.Value.Legal_KnownResponses.Count > 0)
                                             {
                                                 Random rng = new Random();
-                                                int rngNumber = rng.Next(0, lln.Value.KnownResponses.Count - 1);
-                                                Console.WriteLine(lln.Value.KnownResponses[rngNumber].Sentence + "\n");
+                                                int rngNumber = rng.Next(0, lln.Value.Legal_KnownResponses.Count);
+
+                                                Console.Write("Random Response: ");
+                                                var randomSentence = Trie.ReturnRandomSentenceFromPattern(this.trieDict, string.Join("", whatPhrase.SentencePattern).ToCharArray()); // update all words means we don't have to just update the singular node
+
+                                                Console.WriteLine(lln.Value.Legal_KnownResponses[rngNumber].Sentence + "\n");
 
                                                 Console.WriteLine("\nCan you teach me another way to respond?\n");
                                                 string responseSentence = Console.ReadLine();
@@ -269,6 +257,9 @@ namespace EnglishLearner
                                             }
                                             else
                                             {
+                                                Console.Write("Random Response: ");
+                                                var randomSentence = Trie.ReturnRandomSentenceFromPattern(this.trieDict, "NVNCN".ToCharArray()); // update all words means we don't have to just update the 
+                                                Console.WriteLine(randomSentence);
                                                 Console.WriteLine("\nHmm, I don't know what to say to that. Can you teach me what I could reply with?\n");
                                                 string responseSentence = Console.ReadLine();
                                                 AddKnownResponse(responseSentence, lln);
@@ -306,7 +297,24 @@ namespace EnglishLearner
         {
             Phrase responsePhrase = new Phrase(createdSentence, sqlTransposed);
             TrieAction(responsePhrase);
-            lln.Value.KnownResponses.Add(responsePhrase);
+            if (lln.Value.Legal_KnownResponses == null)
+            {
+                lln.Value.Legal_KnownResponses = new List<Phrase>();
+            }
+            lln.Value.Legal_KnownResponses.Add(responsePhrase);
+            FindNode tNode = new FindNode(responsePhrase.Split_Sentence, lln.Value);
+            trieDict[responsePhrase.First_Word].Update_Node(tNode);
+        }
+
+        private void AddIllegalResponse(string createdSentence, LinkedListNode<TrieNode> lln)
+        {
+            Phrase responsePhrase = new Phrase(createdSentence, sqlTransposed);
+            TrieAction(responsePhrase);
+            if (lln.Value.Legal_KnownResponses == null)
+            {
+                lln.Value.Illegal_KnownResponses = new List<Phrase>();
+            }
+            lln.Value.Illegal_KnownResponses.Add(responsePhrase);
             FindNode tNode = new FindNode(responsePhrase.Split_Sentence, lln.Value);
             trieDict[responsePhrase.First_Word].Update_Node(tNode);
         }
@@ -336,14 +344,32 @@ namespace EnglishLearner
 
             int wordSpaceSizing = temp.Value.Word.Length;
 
-            while (temp.Next != null)
-            {
-                if (temp.Next.Value.Word.Length > wordSpaceSizing)
+            // Determines the proper order of the list 
+            if (list.Previous == null)
+            { // list is in reverse order due to recursion adding
+                while (temp.Next != null)
                 {
-                    wordSpaceSizing = temp.Next.Value.Word.Length;
+                    if (temp.Next.Value.Word.Length > wordSpaceSizing)
+                    {
+                        wordSpaceSizing = temp.Next.Value.Word.Length;
+                    }
+                    temp = temp.Next;
                 }
-                temp = temp.Next;
             }
+            else
+            { // list is in proper order
+                while (temp.Previous != null)
+                {
+                    if (temp.Previous.Value.Word.Length > wordSpaceSizing)
+                    {
+                        wordSpaceSizing = temp.Previous.Value.Word.Length;
+                    }
+                    temp = temp.Previous;
+                }
+                temp = list; 
+            }
+
+            
 
             Console.WriteLine("\tIndex\t|\tWord\t|\tType\n");
 
@@ -362,7 +388,16 @@ namespace EnglishLearner
                 if (tackOnExtra > 0) { Console.Write(" "); }
 
                 Console.Write($"   |\t{temp.Value.WordType}\n");
-                temp = temp.Previous;
+
+                if (list.Previous == null)
+                {
+                    temp = temp.Next;
+                }
+                else
+                {
+                    temp = temp.Previous;
+
+                }
             }
         } // function PrintPhraseInfo (from a linked list)
 
@@ -416,13 +451,6 @@ namespace EnglishLearner
                     Trie trieRoot;
                     this.trieDict.TryGetValue(zPhrase.First_Word, out trieRoot);
 
-                    /*
-                     * TODO: --1-- to merge trie stuff
-                     * just merge new stuff with mine. mine will be the definite one. all new info will be added to mine but none of my sentences will be overwritten.
-                     * 
-                     */
-
-
                     if (trieRoot != null)
                     {
                         this.trieDict[zPhrase.First_Word].Append(zPhrase);
@@ -432,6 +460,24 @@ namespace EnglishLearner
                         this.trieDict.Add(zPhrase.First_Word, new Trie(zPhrase));
                     } // else
                 } // if; sentence length > 1
+
+                // Fixes word types if they've been revised before
+                for (int i = 0; i < zPhrase.Split_Sentence.Length; i++)
+                { // Updates all the nodes for the new phrase. Very bad O() but short on time...
+                    if (zPhrase.SentencePattern[i].Equals("?"))
+                    { // Find an unknown and check if the word has been updated before
+                        TrieNode test = null;
+                        correctedNodes.TryGetValue(zPhrase.Split_Sentence[i], out test);
+
+                        if (test != null)
+                        { // if it has a correction, update the Trie again
+                            Trie.UpdateWordTypes(this.trieDict, test);
+                        }
+                    }
+                } // for
+
+                UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
+
             } // try
             catch (Exception e)
             {
