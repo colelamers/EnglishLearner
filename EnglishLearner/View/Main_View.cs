@@ -43,8 +43,18 @@ namespace EnglishLearner
             Console.WriteLine("==================================================\n" +
                               "==================English Learner=================\n" +
                               "==================================================\n\n");
+/*
+            // Learning from file data
+            foreach (string line in File.ReadLines(_config.SolutionDirectory + "\\Data\\LargeDataSet.txt"))
+            {
+                Phrase zPhrase = new Phrase(line, sqlTransposed);
+                TrieAction(zPhrase);
+            }
 
-            // Load
+            UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + $"\\{this._config.SaveFileName}", this.trieDict);
+*/
+            UniversalFunctions.SaveToBinaryFile(this._config.ProjectFolderPaths.ElementAt(2) + "\\correctedNodes.bin", this.correctedNodes);
+
 
             this.correctedNodes = UniversalFunctions.LoadBinaryFile<Dictionary<string, TrieNode>>(_config.ProjectFolderPaths.ElementAt(2) + "\\correctedNodes.bin");
             this.trieDict = UniversalFunctions.LoadBinaryFile<Dictionary<string, Trie>>(_config.ProjectFolderPaths.ElementAt(2) + $"\\{_config.SaveFileName}");
@@ -220,6 +230,7 @@ namespace EnglishLearner
                                                 Console.Write("Random Response: ");
                                                 var randomSentence = Trie.ReturnRandomSentenceFromPattern(this.trieDict, string.Join("", whatPhrase.SentencePattern).ToCharArray()); // update all words means we don't have to just update the singular node
 
+                                                if (lln.Value.Illegal_KnownResponses.Contains(randomSentence))
                                                 Console.WriteLine(randomSentence + "\n");
                                                 if(yesOrNo("Was that sentence any good?\n"))
                                                 {
@@ -233,7 +244,7 @@ namespace EnglishLearner
                                                 }
 
                                                 Console.WriteLine("\nHe're is a sentence I do know how to respond with!\n");
-                                                Console.WriteLine(lln.Value.Legal_KnownResponses[rngNumber].Sentence + "\n");
+                                                Console.WriteLine(lln.Value.Legal_KnownResponses[rngNumber] + "\n");
 
                                                 Console.WriteLine("\nCan you teach me another way to respond?\n");
                                                 string responseSentence = Console.ReadLine();
@@ -333,9 +344,9 @@ namespace EnglishLearner
             TrieAction(responsePhrase);
             if (lln.Value.Legal_KnownResponses == null)
             {
-                lln.Value.Legal_KnownResponses = new List<Phrase>();
+                lln.Value.Legal_KnownResponses = new List<string>();
             }
-            lln.Value.Legal_KnownResponses.Add(responsePhrase);
+            lln.Value.Legal_KnownResponses.Add(responsePhrase.Sentence);
             FindNode tNode = new FindNode(responsePhrase.Split_Sentence, lln.Value);
             trieDict[responsePhrase.First_Word].Update_Node(tNode);
         }
@@ -346,9 +357,9 @@ namespace EnglishLearner
             TrieAction(responsePhrase);
             if (lln.Value.Legal_KnownResponses == null)
             {
-                lln.Value.Illegal_KnownResponses = new List<Phrase>();
+                lln.Value.Illegal_KnownResponses = new List<string>();
             }
-            lln.Value.Illegal_KnownResponses.Add(responsePhrase);
+            lln.Value.Illegal_KnownResponses.Add(responsePhrase.Sentence);
             FindNode tNode = new FindNode(responsePhrase.Split_Sentence, lln.Value);
             trieDict[responsePhrase.First_Word].Update_Node(tNode);
         }

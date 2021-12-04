@@ -63,6 +63,7 @@ namespace EnglishLearner
 
         private void DFS_Append(Phrase currentPhrase, TrieNode Current)
         {
+            Current.WordFrequency++;
             if (currentPhrase.Split_Sentence.Length > Current.NodeDepth + 1)
             {
                 TrieNode Next = null;
