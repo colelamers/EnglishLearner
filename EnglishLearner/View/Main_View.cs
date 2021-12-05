@@ -93,8 +93,8 @@ namespace EnglishLearner
                             // TODO: --2-- i kinda hate this but i'm running out of time so this is just gonna have to do...do it functionally returning trues/falses
                             foreach (string key in this.trieDict.Keys)
                             {
-                                Trie.Reset_Trie_Touches(trieDict);
-                                LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict, new LinkedList<TrieNode>());
+                                //Trie.Reset_Trie_Touches(trieDict);
+                                LinkedListNode<TrieNode> lln = Trie.Get_Sentence_As_LinkedList(this.trieDict);
 
                                 while (lln != null)
                                 {
@@ -217,7 +217,7 @@ namespace EnglishLearner
 
                                         if (lln != null)
                                         {
-                                            if (userSentence.Equals("--exit"))
+                                            if (userSentence.Equals("--exit\n"))
                                             {
                                                 doneTalking = false;
                                                 break;
@@ -227,22 +227,20 @@ namespace EnglishLearner
                                                 Random rng = new Random();
                                                 int rngNumber = rng.Next(0, lln.Value.Legal_KnownResponses.Count);
 
-                                                Console.Write("Random Response: ");
-                                                var randomSentence = Trie.ReturnRandomSentenceFromPattern(this.trieDict, string.Join("", whatPhrase.SentencePattern).ToCharArray()); // update all words means we don't have to just update the singular node
-
-                                                if (lln.Value.Illegal_KnownResponses.Contains(randomSentence))
-                                                Console.WriteLine(randomSentence + "\n");
-                                                if(yesOrNo("Was that sentence any good?\n"))
+                                                Console.Write("\nRandom Response: ");
+                                                string randomSentence = Trie.ReturnRandomSentenceFromPattern(this.trieDict, string.Join("", whatPhrase.SentencePattern).ToCharArray()); // update all words means we don't have to just update the singular node
+                                                if (lln.Value.Illegal_KnownResponses != null)
                                                 {
-                                                    Console.WriteLine("\nNice! I'll remember that one.\n");
-                                                    AddKnownResponse(randomSentence, lln);
+                                                    if (!lln.Value.Illegal_KnownResponses.Contains(randomSentence))
+                                                    {
+                                                        Console.WriteLine("\n" + randomSentence + "\n");
+                                                        if (yesOrNo("\nWas that sentence any good?\n"))
+                                                        {
+                                                            Console.WriteLine("\nNice! I'll remember that one.\n");
+                                                            AddKnownResponse(randomSentence, lln);
+                                                        }
+                                                    }
                                                 }
-                                                else
-                                                {
-                                                    Console.WriteLine("\nWow...English is not an easy language!\n");
-                                                    AddIllegalResponse(randomSentence, lln);
-                                                }
-
                                                 Console.WriteLine("\nHe're is a sentence I do know how to respond with!\n");
                                                 Console.WriteLine(lln.Value.Legal_KnownResponses[rngNumber] + "\n");
 

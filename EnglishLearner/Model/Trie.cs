@@ -495,13 +495,17 @@ namespace EnglishLearner
             return lln;
         } // function Get_Sentence_As_LinkedList
 
-        public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict, LinkedList<TrieNode> newllnList)
+        public static LinkedListNode<TrieNode> Get_Sentence_As_LinkedList(Dictionary<string, Trie> trieDict)
         { // gets first instance on untouched endnodes
             LinkedListNode<TrieNode> lln = null;
+            var newllnList = new LinkedList<TrieNode>();
             bool notFoundYet = false;
 
             foreach (string tKey in trieDict.Keys)
             { // finds a linkedlist 
+                newllnList = null;
+                newllnList = new LinkedList<TrieNode>();
+
                 DFS_Find_Sentence(newllnList, ref lln, trieDict[tKey].Root);
                 if (newllnList.Count > 0)
                 {
@@ -515,6 +519,7 @@ namespace EnglishLearner
                         }
                         temp = temp.Previous;
                     } // while
+ 
                 } // if
 
                 if (notFoundYet)
