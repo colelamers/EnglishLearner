@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace EnglishLearner
 {
     /*
-     * Created by Cole Lamers & Hunter Van de Water
+     * Created by Cole Lamers
      * Date: 2021-11-04
      * 
      * == Purpose ==
